@@ -33,6 +33,7 @@
 	},
 	"dependencies": {
 		"autoprefixer": "^10.4.20",
-		"postcss": "^8.5.3"
+		"postcss": "^8.5.3",
+		"svelte-kit-sst": "^2.43.5"
 	}
 }

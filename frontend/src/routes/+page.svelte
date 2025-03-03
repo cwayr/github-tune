@@ -2,7 +2,6 @@
   import { onMount } from 'svelte';
   import ContributionGraph from '../components/ContributionGraph.svelte';
   import PlaybackControls from '../components/PlaybackControls.svelte';
-  import { fetchGitHubContributions } from '../lib/github-data';
   import { audioEngine } from '../lib/audio-engine';
   import type { AppState, ContributionYear, PlaybackSettings } from '../config/types';
 
@@ -16,6 +15,7 @@
     scale: audioEngine.getAvailableScales()[0]
   };
   let theme: 'light' | 'dark' | 'custom' = 'light';
+  const apiUrl = import.meta.env.VITE_FETCHER_URL;
   
   function handleSubmit() {
     if (username) {
@@ -24,9 +24,24 @@
   }
 
   async function fetchContributions() {
-    contributionData = await fetchGitHubContributions(username);
-    currentPosition = null;
-    stopPlayback();
+    try {
+      const response = await fetch(`${apiUrl}?username=${encodeURIComponent(username)}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch contributions');
+      }
+      const html = await response.text();
+      contributionData = parseContributions(html);
+      currentPosition = null;
+      stopPlayback();
+    } catch (error) {
+      console.error('Error fetching contributions:', error);
+    }
+  }
+
+  function parseContributions(html: string): ContributionYear {
+    // Parse the HTML and convert it to ContributionYear format
+    // Implement this function based on your requirements
+    return { weeks: [] };
   }
 
   function togglePlay() {

@@ -6,18 +6,18 @@ const functionsPath = "../backend/functions"
 export default $config({
   app(input) {
     return {
-      name: "infrastructure",
+      name: "ContributionMedley",
       removal: input?.stage === "production" ? "retain" : "remove",
       protect: ["production"].includes(input?.stage),
       home: "aws",
     };
   },
   async run() {
-    const site = new sst.aws.StaticSite("ContributionMedleySite", {
+    const site = new sst.aws.StaticSite("cm-ContributionMedleySite", {
       path: frontendPath
     })
 
-    const contributionFetcher = new sst.aws.Function("contributionFetcher", {
+    const contributionFetcher = new sst.aws.Function("cm-ContributionFetcher", {
       handler: `${functionsPath}/contributionFetcher.handler`,
       url: true,
     })

@@ -15,7 +15,8 @@
     scale: audioEngine.getAvailableScales()[0]
   };
   let theme: 'light' | 'dark' | 'custom' = 'light';
-  const apiUrl = import.meta.env.VITE_FETCHER_URL;
+  const apiUrl = import.meta.env.VITE_FETCHER_URL || '';
+  console.log('Frontend API URL:', apiUrl); // Debug log to see what URL is being used
   
   function handleSubmit() {
     if (username) {

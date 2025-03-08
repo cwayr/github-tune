@@ -22,10 +22,13 @@ export default $config({
       url: true,
     })
 
+    const functionUrl = contributionFetcher.url || '';
+    console.log('Function URL:', functionUrl)
+
     return {
-      VITE_FETCHER_URL: contributionFetcher.url,
+      VITE_FETCHER_URL: functionUrl,
       siteUrl: site.url,
-      functionUrl: contributionFetcher.url
+      functionUrl: functionUrl
     }
   },
 });

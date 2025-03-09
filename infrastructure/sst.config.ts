@@ -13,22 +13,46 @@ export default $config({
     };
   },
   async run() {
-    const site = new sst.aws.StaticSite("cm-ContributionMedleySite", {
-      path: frontendPath
-    })
-
     const contributionFetcher = new sst.aws.Function("cm-ContributionFetcher", {
-      handler: `${functionsPath}/contributionFetcher.handler`,
-      url: true,
+      handler: `${functionsPath}/contributionHandler/index.handler`,
+      // url: {
+      //   cors: {
+      //     allowOrigins: ['*'],
+      //     allowMethods: ['*'],
+      //     allowHeaders: ['*'],
+      //   }
+      // },
+      nodejs: {
+        install: ["cheerio"]
+      }
     })
 
-    const functionUrl = contributionFetcher.url || '';
-    console.log('Function URL:', functionUrl)
+    const api = new sst.aws.ApiGatewayV2('cm-API', {
+      cors: {
+        allowOrigins: ['*'],
+        allowMethods: ['*'],
+        allowHeaders: ['*'],
+      }
+    });
+
+    api.route(
+      'GET /contributions',
+      `${functionsPath}/contributionHandler/index.handler`,
+    )
+
+    const invokeUrl = api.url || '';
+    console.log('Invoke URL:', invokeUrl)
+    
+    const site = new sst.aws.StaticSite("cm-ContributionMedleySite", {
+      path: frontendPath,
+      environment: {
+        VITE_FETCHER_URL: invokeUrl
+      }
+    })
 
     return {
-      VITE_FETCHER_URL: functionUrl,
       siteUrl: site.url,
-      functionUrl: functionUrl
+      invokeUrl: invokeUrl
     }
   },
 });

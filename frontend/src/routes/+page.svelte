@@ -15,8 +15,8 @@ let playbackSettings: PlaybackSettings = {
  scale: audioEngine.getAvailableScales()[0]
 };
 let theme: 'light' | 'dark' | 'custom' = 'light';
-const apiUrl = import.meta.env.VITE_FETCHER_URL || '   invokeUrl: https://epzj4ypafa.execute-api.us-east-1.amazonaws.com';
-console.log('Frontend API URL:', apiUrl); // Debug log to see what URL is being used
+const fnUrl = import.meta.env.VITE_FN_URL || '';
+console.log('Frontend FN URL:', fnUrl);
 
 function handleSubmit() {
   if (username) {
@@ -26,7 +26,7 @@ function handleSubmit() {
 
 async function fetchContributions() {
   try {
-    const response = await fetch(`${apiUrl}/contributions?username=${encodeURIComponent(username)}`);
+    const response = await fetch(`${fnUrl}/contributions?username=${encodeURIComponent(username)}`);
     console.log('contributions fetched:', response)
       if (!response.ok) {
         throw new Error('Failed to fetch contributions');

@@ -1,5 +1,6 @@
 import {
   Stack,
+  Duration,
   CfnOutput,
   StackProps,
   aws_s3 as s3,
@@ -8,6 +9,7 @@ import {
   aws_cloudfront as cloudfront,
   aws_s3_deployment as s3deploy,
   aws_cloudfront_origins as origins,
+  aws_lambda_nodejs as nodejs_lambda,
 } from 'aws-cdk-lib';
 import * as path from 'path';
 import { Construct } from 'constructs';
@@ -16,10 +18,18 @@ export class InfrastructureStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const apiFunction = new lambda.Function(this, 'ApiFunction', {
+    const apiFunction = new nodejs_lambda.NodejsFunction(this, 'ApiFunction', {
       runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'index.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../../backend/functions/contributionFetcher')),
+      handler: 'handler',
+      memorySize: 512,
+      entry: path.join(__dirname, '../../backend/functions/contributionFetcher/index.ts'),
+      timeout: Duration.seconds(15),
+      bundling: {
+        minify: true,
+        sourceMap: true,
+        externalModules: [],
+        nodeModules: ['cheerio']
+      },
     });
 
     const functionUrl = apiFunction.addFunctionUrl({
@@ -55,7 +65,7 @@ export class InfrastructureStack extends Stack {
     // Generate a simple config.js file with the function URL
     const configFile = new s3deploy.BucketDeployment(this, 'ConfigDeployment', {
       sources: [
-        s3deploy.Source.data('config.js', `window.ENV = { VITE_API_URL: "${functionUrl.url}" };`),
+        s3deploy.Source.data('config.js', `window.ENV = { VITE_FN_URL: "${functionUrl.url}" };`),
       ],
       destinationBucket: websiteBucket,
     });
@@ -63,7 +73,7 @@ export class InfrastructureStack extends Stack {
     // Deploy the built Svelte app to S3
     // This assumes you've already built your Svelte app before deploying
     const websiteDeployment = new s3deploy.BucketDeployment(this, 'WebsiteDeployment', {
-      sources: [s3deploy.Source.asset(path.join(__dirname, '../../frontend/.svelte-kit/output'))], // Path to SvelteKit build output
+      sources: [s3deploy.Source.asset(path.join(__dirname, '../../frontend/.svelte-kit/output/client'))], // Path to SvelteKit client-side build output
       destinationBucket: websiteBucket,
       distribution,
       distributionPaths: ['/*'],

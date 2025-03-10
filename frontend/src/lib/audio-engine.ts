@@ -51,17 +51,17 @@ class AudioEngine {
             phase: 0,
           },
           envelope: {
-            attack: 0.015, // Quick but gentle attack
-            decay: 0.4,
-            sustain: 0.5,
-            release: 1.2 // Longer release for beautiful trails
+            attack: 0.01, // Quick attack for plucky sound
+            decay: 0.1,   // Short decay for quicker note release
+            sustain: 0.1,  // Short sustain for plucky feel
+            release: 0.3   // Quick release to allow notes to stop ringing
           }
         });
         
         // Create effects for more beautiful sound
         this.reverb = new Tone.Reverb({
-          decay: 2.5,
-          wet: 0.3
+          decay: 4.0,   // Increased decay for longer reverb
+          wet: 0.9      // Increased wet level for more reverb effect
         }).toDestination();
         
         this.chorus = new Tone.Chorus({
@@ -176,8 +176,8 @@ class AudioEngine {
     }
     
     // Calculate playback duration based on speed setting
-    // Base duration is 800ms but with proper release tail for beautiful sound
-    const duration = (200 / settings.speed) + 200; // Add 200ms for natural decay
+    // Base duration is 400ms but with proper release tail for beautiful sound
+    const duration = (400 / settings.speed) + 100; // Shorter duration for quicker notes
     
     // Schedule completion callback
     setTimeout(() => {

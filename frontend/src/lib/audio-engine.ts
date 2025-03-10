@@ -105,7 +105,8 @@ class AudioEngine {
     });
     
     // Stop sound after a duration based on playback speed
-    const duration = 1000 / settings.speed;
+    // Base duration is now 400ms instead of 1000ms to make default playback faster
+    const duration = 400 / settings.speed;
     setTimeout(() => {
       this.stopSound();
       onComplete();

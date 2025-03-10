@@ -24,8 +24,8 @@ function getContributionColor(count: number): string {
   }
 }
 
-function isActiveCell(week: number, day: number): boolean {
-  return currentPosition?.week === week && currentPosition?.day === day;
+function isActiveWeek(week: number): boolean {
+  return currentPosition?.week === week;
 }
 </script>
 
@@ -45,13 +45,11 @@ function isActiveCell(week: number, day: number): boolean {
 
 <div class="weeks-container">
 {#each contributionData.weeks as week, weekIndex}
-<div class="week">
+<div class="week {isActiveWeek(weekIndex) ? 'active-week-container' : ''}">
 {#each week.days as day, dayIndex}
 <div
-class="day-cell"
-style="background-color: {getContributionColor(day.count)}; 
-opacity: {isActiveCell(weekIndex, dayIndex) ? '0.7' : '1'}; 
-transform: {isActiveCell(weekIndex, dayIndex) ? 'scale(1.2)' : 'scale(1)'}"
+class="day-cell {isActiveWeek(weekIndex) ? 'active-week' : ''}"
+style="background-color: {getContributionColor(day.count)};"
 data-count={day.count}
 data-date={day.date}
 ></div>
@@ -106,18 +104,41 @@ gap: 2px;
 }
 
 .day-cell {
-width: 10px;
-height: 10px;
-        border-radius: 2px;
-position: relative;
-transition: transform 0.1s ease-in-out;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  position: relative;
+  transition: all 0.1s ease-in-out;
 }
 
 .day-cell:hover {
-transform: scale(1.2);
+  transform: scale(1.2);
+  z-index: 10;
 }
 
-.day-cell:hover {
-transform: scale(1.2);
+.active-week {
+  opacity: 0.8;
+  box-shadow: 0 0 3px 1px rgba(255, 255, 255, 0.5);
+  z-index: 5;
+  transform: scale(1.2);
+}
+
+/* Removed unused .active-cell selector */
+
+/* Active week container styles */
+.active-week-container {
+  position: relative;
+}
+
+.active-week-container::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  right: -5px;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3), transparent);
+  pointer-events: none;
+  z-index: 1;
 }
 </style>

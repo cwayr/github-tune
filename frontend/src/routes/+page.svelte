@@ -26,85 +26,32 @@ function handleSubmit() {
 
 async function fetchContributions() {
   try {
+    console.log('Fetching contributions for:', username);
     const response = await fetch(`${fnUrl}/contributions?username=${encodeURIComponent(username)}`);
-    console.log('contributions fetched:', response)
-      if (!response.ok) {
-        throw new Error('Failed to fetch contributions');
-      }
-    const html = await response.text();
-    console.log('contributions html', html)
-      contributionData = parseContributions(html);
-    console.log('contributions data', contributionData)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch contributions: ${response.status} ${response.statusText}`);
+    }
+    
+    const jsonText = await response.text();
+    console.log('Raw response:', jsonText);
+    
+    try {
+      // Parse the JSON response and assign it to the contributionData variable
+      contributionData = JSON.parse(jsonText);
+      console.log('Parsed contributionData:', contributionData);
+      
+      // Reset the playback position
       currentPosition = null;
-    stopPlayback();
+      stopPlayback();
+    } catch (parseError) {
+      console.error('Error parsing JSON:', parseError);
+      console.error('Invalid JSON content:', jsonText);
+      throw new Error('Invalid response format from server');
+    }
   } catch (error) {
     console.error('Error fetching contributions:', error);
+    alert(`Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
   }
-}
-
-function parseContributions(html: string): ContributionYear {
-  // Parse the HTML into a DOM document
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
-
-  // Find the contribution calendar table body
-  const tbody = doc.querySelector('.ContributionCalendar-grid tbody');
-  if (!tbody) {
-    console.error('Could not find contribution calendar tbody');
-    return { weeks: [], year: new Date().getFullYear() };
-  }
-
-  // Get all rows (one per day of the week)
-  const rows = Array.from(tbody.querySelectorAll('tr'));
-
-  // Determine the maximum number of weeks based on the number of day elements in any row
-  const maxWeeks = Math.max(
-      ...rows.map(row => row.querySelectorAll('td.ContributionCalendar-day').length)
-      );
-
-  const weeks: ContributionWeek[] = [];
-
-  // Iterate over each week index
-  for (let weekIndex = 0; weekIndex < maxWeeks; weekIndex++) {
-    const days: Contribution[] = [];
-
-    // Iterate over each day of the week (Sunday = 0, ..., Saturday = 6)
-    for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
-      const row = rows[dayIndex];
-      const dayElements = row.querySelectorAll('td.ContributionCalendar-day');
-
-      // Check if the week index exists in this row
-      if (weekIndex < dayElements.length) {
-        const dayElement = dayElements[weekIndex];
-        const date = dayElement.getAttribute('data-date');
-
-        // Only include days with a valid date (skip placeholders)
-        if (date) {
-          // Extract the title attribute and parse the contribution count
-          const title = dayElement.getAttribute('title') || '';
-          const match = title.match(/(\d+) contribution(s)?/);
-          const count = match ? parseInt(match[1], 10) : 0;
-
-          days.push({ date, count });
-        }
-      }
-    }
-
-    // Add the week if it has any valid days
-    if (days.length > 0) {
-      weeks.push({ days });
-    }
-  }
-
-  // Extract the year from the first date in the first week if available
-  const year = weeks.length > 0 && weeks[0].days.length > 0
-    ? new Date(weeks[0].days[0].date).getFullYear()
-    : new Date().getFullYear();
-
-  return {
-    weeks,
-      year
-  };
 }
 
 function togglePlay() {
@@ -125,25 +72,30 @@ function startPlayback() {
 function stopPlayback() {
   isPlaying = false;
   audioEngine.stopSound();
+  // Clear the current position to remove highlighting
+  currentPosition = null;
 }
 
 function playWeek(week: number) {
   if (!isPlaying || !contributionData) return;
 
+  // Update current position to highlight the entire week
   currentPosition = { week, day: 0 };
-
+  
+  // Play the sound for this week
   audioEngine.playContributionWeek(
-      week,
-      contributionData,
-      playbackSettings,
-      () => {
+    week,
+    contributionData,
+    playbackSettings,
+    () => {
+      // Move to the next week if we're still playing and there are more weeks
       if (isPlaying && contributionData && week < contributionData.weeks.length - 1) {
-      playWeek(week + 1);
+        playWeek(week + 1);
       } else {
-      stopPlayback();
+        stopPlayback();
       }
-      }
-      );
+    }
+  );
 }
 
 function updateSettings(event: CustomEvent) {
@@ -182,7 +134,7 @@ placeholder="Enter GitHub username"
 class="flex-grow p-2 border rounded"
 />
 <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">
-Generate Music
+Generate
 </button>
 </form>
 </div>
@@ -240,7 +192,7 @@ href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out the
 target="_blank"
 class="bg-blue-400 text-white px-4 py-2 rounded"
 >
-Share on Twitter
+Share on X
 </a>
 <a
 href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(generateShareLink())}`}

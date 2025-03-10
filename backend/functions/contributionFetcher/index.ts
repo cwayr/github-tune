@@ -2,7 +2,7 @@ import { parseContributions } from './parseContributions'
 
 export async function handler(event: any) {
   const username = event.queryStringParameters?.username;
-  const year = event.queryStringParameters?.year || new Date().getFullYear();
+  const year = event.queryStringParameters?.year;
 
   try {
     // const url = `https://github.com/users/${encodeURIComponent(username)}/contributions?to=${year}-12-31`

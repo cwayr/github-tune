@@ -1,7 +1,6 @@
 import { parseContributions } from './parseContributions'
 
 export async function handler(event: any) {
-  console.log("entering handler")
   const username = event.queryStringParameters?.username;
   const year = event.queryStringParameters?.year || new Date().getFullYear();
 
@@ -23,7 +22,6 @@ export async function handler(event: any) {
       throw new Error('GitHub response does not contain contribution data');
     }
 
-    console.log('Parsing contributions...');
     const contributions = parseContributions(html, parseInt(year));
     console.log('Successfully parsed contributions:', {
       numWeeks: contributions.weeks.length,
@@ -32,23 +30,11 @@ export async function handler(event: any) {
     
     return {
       statusCode: 200,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "*",
-        "Access-Control-Allow-Headers": "*",
-        "Content-Type": "application/json"
-      },
       body: JSON.stringify(contributions),
     };
   } catch (error: any) {
     return {
       statusCode: 500,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "*",
-        "Access-Control-Allow-Headers": "*",
-        "Content-Type": "application/json"
-      },
       body: JSON.stringify({ error: error.message }),
     };
   }

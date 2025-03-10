@@ -46,7 +46,7 @@
       on:click={togglePlay} 
       class="play-button bg-blue-500 text-white px-4 py-2 rounded"
     >
-      {isPlaying ? 'Pause' : 'Play'}
+      {isPlaying ? 'Stop' : 'Play'}
     </button>
   </div>
 

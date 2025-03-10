@@ -54,11 +54,21 @@ async function fetchContributions() {
   }
 }
 
-function togglePlay() {
+async function togglePlay() {
   if (isPlaying) {
     stopPlayback();
   } else {
-    startPlayback();
+    // Explicitly start Tone.js context on user interaction to comply with browser autoplay policies
+    try {
+      // Import Tone dynamically to avoid SSR issues
+      const Tone = await import('tone');
+      await Tone.start();
+      console.log('Tone.js context started on user interaction');
+      startPlayback();
+    } catch (error) {
+      console.error('Failed to start Tone.js:', error);
+      alert('Failed to start audio. Please try again.');
+    }
   }
 }
 

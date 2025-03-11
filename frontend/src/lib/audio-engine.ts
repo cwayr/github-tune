@@ -11,32 +11,27 @@ class AudioEngine {
   
   // Predefined musical scales with more expressive note ranges
   private scales: Record<string, MusicScale> = {
-    major: {
-      name: 'Major',
+    joyful: {
+      name: 'Joyful',
       notes: ['C4', 'E4', 'G4', 'B4', 'C5', 'D5', 'E5', 'G5']
     },
-    minor: {
-      name: 'Minor',
+    melancholy: {
+      name: 'Melancholy',
       notes: ['C4', 'Eb4', 'G4', 'Bb4', 'C5', 'D5', 'Eb5', 'G5']
     },
-    pentatonic: {
-      name: 'Pentatonic',
+    dreamy: {
+      name: 'Dreamy',
       notes: ['C4', 'D4', 'E4', 'G4', 'A4', 'C5', 'D5', 'E5']
     },
-    dorian: {
-      name: 'Dorian',
+    mysterious: {
+      name: 'Mysterious',
       notes: ['D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'D5']
     },
-    lydian: {
-      name: 'Lydian',
+    ethereal: {
+      name: 'Ethereal',
       notes: ['F4', 'G4', 'A4', 'B4', 'C5', 'D5', 'E5', 'F5']
     }
   };
-  
-  constructor() {
-    // Don't initialize audio in constructor to avoid autoplay restrictions
-    // Will initialize on first user interaction instead
-  }
   
   private async initAudio() {
     if (typeof window !== 'undefined' && !this.isInitialized) {
@@ -51,7 +46,7 @@ class AudioEngine {
             phase: 0,
           },
           envelope: {
-            attack: 0.01, // Quick attack for plucky sound
+            attack: 0.02, // Quick attack for plucky sound
             decay: 0.1,   // Short decay for quicker note release
             sustain: 0.1,  // Short sustain for plucky feel
             release: 0.3   // Quick release to allow notes to stop ringing
@@ -61,7 +56,7 @@ class AudioEngine {
         // Create effects for more beautiful sound
         this.reverb = new Tone.Reverb({
           decay: 4.0,   // Increased decay for longer reverb
-          wet: 0.9      // Increased wet level for more reverb effect
+          wet: 0.6      // Increased wet level for more reverb effect
         }).toDestination();
         
         this.chorus = new Tone.Chorus({
@@ -127,57 +122,37 @@ class AudioEngine {
     const hasContributions = weekData.days.some(day => day.count > 0);
     
     // Gather all notes to play simultaneously as a beautiful chord
-    const notesToPlay: { note: string; velocity: number }[] = [];
+    const notesToPlay: string[] = [];
     
     if (hasContributions) {
-      // Map contribution days to notes and velocities
+      // Map contribution days to notes
       weekData.days.forEach((day, dayIndex) => {
         if (day.count > 0) {
           // Map day index to a note in the selected scale
           const note = scale.notes[dayIndex % scale.notes.length];
-          
-          // Map contribution count to velocity (intensity)
-          // Normalize between 0.1 and 0.9
-          const maxContribution = 10; // Assuming 10 is a high daily contribution count
-          const velocity = Math.min(0.3 + (day.count / maxContribution) * 0.6, 0.9);
-          
-          notesToPlay.push({ note, velocity });
+          notesToPlay.push(note);
           this.activeNotes.push(note);
         }
       });
     } else {
-      // For weeks with no contributions, play a soft ambient note
-      // Use a lower octave note with low velocity for subtle sound
+      // For weeks with no contributions, play an ambient note
       const ambientNote = scale.notes[0]; // Use first note of scale
-      notesToPlay.push({ note: ambientNote, velocity: 0.1 });
+      notesToPlay.push(ambientNote);
       this.activeNotes.push(ambientNote);
     }
     
-    // Spread the chord slightly for a more natural arpeggiated sound
-    let timeOffset = 0;
-    const attackSpread = 0.04; // Slight time spread between notes for a beautiful arpeggio effect
-    
-    // Play notes with beautiful articulation
-    if (this.polySynth) {
-      notesToPlay.forEach(({ note, velocity }) => {
-        // Volume scaling with master volume control
-        const adjustedVelocity = velocity * settings.volume;
-        
-        // Play note with slight timing offset
-        this.polySynth?.triggerAttackRelease(
-          note,
-          '2n', // Half note duration
-          Tone.now() + timeOffset,
-          adjustedVelocity
-        );
-        
-        timeOffset += attackSpread;
-      });
+    // Play all notes simultaneously as a chord
+    if (this.polySynth && notesToPlay.length > 0) {
+      this.polySynth.triggerAttackRelease(
+        notesToPlay,
+        '2n', // Half note duration
+        Tone.now()
+      );
     }
     
     // Calculate playback duration based on speed setting
-    // Base duration is 400ms but with proper release tail for beautiful sound
-    const duration = (400 / settings.speed) + 100; // Shorter duration for quicker notes
+    // Base duration is 300ms but with proper release tail for beautiful sound
+    const duration = (300 / settings.speed) + 100;
     
     // Schedule completion callback
     setTimeout(() => {

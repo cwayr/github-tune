@@ -68,7 +68,7 @@
             id="speed" 
             type="range" 
             min="0.5" 
-            max="3" 
+            max="2" 
             step="0.1" 
             value={settings.speed} 
             on:input={updateSpeed} 
@@ -76,7 +76,7 @@
           />
           <div class="slider-labels">
             <span>0.5x</span>
-            <span>3x</span>
+            <span>2x</span>
           </div>
         </div>
       </div>
@@ -105,7 +105,7 @@
       </div>
 
       <div class="control-section scale-section">
-        <label for="scale" class="control-label">Musical Scale</label>
+        <label for="scale" class="control-label">Mood</label>
         <div class="select-container">
           <select 
             id="scale" 

@@ -178,12 +178,12 @@ onMount(() => {
     <div class="container">
       <div class="hero-content animate-fadeIn">
         <h1 class="site-title">
-          <span class="gradient-text" data-text="Contribution">Contribution</span> Medley
+          <span class="gradient-text" data-text="Contribution">Contribution</span> Melody
         </h1>
         
         {#if showIntro && !contributionData}
           <p class="intro-text animate-slideInUp delay-100">
-            Transform your GitHub contributions into beautiful music. Enter your username to hear your code's melody.
+            Transform your GitHub contributions into music. Enter your username to hear your code's melody.
           </p>
         {/if}
         

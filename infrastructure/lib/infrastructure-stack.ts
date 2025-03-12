@@ -18,11 +18,22 @@ export class InfrastructureStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
+    const backendFnsPath = '../../backend/functions'
+    const frontendBuildPath = '../../frontend/.svelte-kit/output/client'
+
+    const environment = this.node.tryGetContext('environment') || 'dev';
+    console.log(`Deploying to ${environment} environment`);
+    // const isProd = environment === 'prod';
+
     const apiFunction = new nodejs_lambda.NodejsFunction(this, 'ApiFunction', {
+      functionName: 'ContributionTuneFetcher',
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'handler',
       memorySize: 512,
-      entry: path.join(__dirname, '../../backend/functions/contributionFetcher/index.ts'),
+      entry: path.join(
+        __dirname, 
+        `${backendFnsPath}/contributionFetcher/index.ts`
+      ),
       timeout: Duration.seconds(15),
       bundling: {
         minify: true,
@@ -42,6 +53,7 @@ export class InfrastructureStack extends Stack {
     });
 
     const websiteBucket = new s3.Bucket(this, 'WebsiteBucket', {
+      bucketName: 'ContributionTuneSrc',
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
@@ -50,7 +62,8 @@ export class InfrastructureStack extends Stack {
     const distribution = new cloudfront.Distribution(this, 'WebsiteDistribution', {
       defaultBehavior: {
         origin: new origins.S3Origin(websiteBucket),
-        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        viewerProtocolPolicy: 
+          cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
       defaultRootObject: 'index.html',
       errorResponses: [
@@ -65,15 +78,16 @@ export class InfrastructureStack extends Stack {
     // Generate a simple config.js file with the function URL
     const configFile = new s3deploy.BucketDeployment(this, 'ConfigDeployment', {
       sources: [
-        s3deploy.Source.data('config.js', `window.ENV = { VITE_FN_URL: "${functionUrl.url}" };`),
+        s3deploy.Source.data(
+          'config.js', 
+          `window.ENV = { VITE_FN_URL: "${functionUrl.url}" };`
+        ),
       ],
       destinationBucket: websiteBucket,
     });
 
-    // Deploy the built Svelte app to S3
-    // This assumes you've already built your Svelte app before deploying
     const websiteDeployment = new s3deploy.BucketDeployment(this, 'WebsiteDeployment', {
-      sources: [s3deploy.Source.asset(path.join(__dirname, '../../frontend/.svelte-kit/output/client'))], // Path to SvelteKit client-side build output
+      sources: [s3deploy.Source.asset(path.join(__dirname, frontendBuildPath))],
       destinationBucket: websiteBucket,
       distribution,
       distributionPaths: ['/*'],
@@ -83,7 +97,6 @@ export class InfrastructureStack extends Stack {
     // Make sure config is deployed before the website
     websiteDeployment.node.addDependency(configFile);
 
-    // Output the CloudFront URL and Function URL
     new CfnOutput(this, 'WebsiteURL', {
       value: `https://${distribution.distributionDomainName}`,
       description: 'Website URL',

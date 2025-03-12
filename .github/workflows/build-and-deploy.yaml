@@ -1,12 +1,17 @@
 name: Build and Deploy
 
-name: Build and Deploy
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+  release:
+    types: [published]
 
 env:
   SVELTE_BUILD: frontend/.svelte-kit/output/client
+  DEPLOY_ENV: ${{ github.event_name == 'release' && 'prod' || 'dev' }}
 
-on:
-  push:
 jobs:
   build-frontend:
     runs-on: ubuntu-latest
@@ -37,7 +42,7 @@ jobs:
   deploy-cdk:
     needs: build-frontend
     runs-on: ubuntu-latest
-    environment: ${{ github.event_name == 'release' && 'prod' || 'dev' }}
+    environment: ${{ env.DEPLOY_ENV }}
     steps:
       - uses: actions/checkout@v4
       
@@ -68,4 +73,7 @@ jobs:
       - name: Deploy with CDK
         working-directory: ./infrastructure
         run: |
-          npx cdk deploy --all --require-approval never --context environment=${{ github.event_name == 'release' && 'prod' || 'dev' }}
+          npx cdk deploy \
+          --all \
+          --require-approval never \
+          --context environment=${{ env.DEPLOY_ENV }}

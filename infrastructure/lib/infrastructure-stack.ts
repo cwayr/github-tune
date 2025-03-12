@@ -26,7 +26,7 @@ export class InfrastructureStack extends Stack {
     // const isProd = environment === 'prod';
 
     const apiFunction = new nodejs_lambda.NodejsFunction(this, 'ct-fetcher', {
-      functionName: 'contributionTuneFetcher',
+      functionName: 'contribution-tune-fetcher',
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'handler',
       memorySize: 512,
@@ -53,7 +53,7 @@ export class InfrastructureStack extends Stack {
     });
 
     const websiteBucket = new s3.Bucket(this, 'ct-srcBucket', {
-      bucketName: 'contributionTuneSrc',
+      bucketName: 'contribution-tune-src',
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteObjects: true,

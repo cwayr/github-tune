@@ -34,12 +34,19 @@ jobs:
       - name: Build site
         working-directory: ./frontend
         run: pnpm run build
+
+      - name: Debug
+        run: |
+          ls -la frontend/.svelte-kit/output
+          ls -la frontend/.svelte-kit/output/client
+          ls -la $SVELTE_BUILD
         
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build
           path: $SVELTE_BUILD
+          if-no-files-found: error
           
   deploy-cdk:
     needs: build-frontend

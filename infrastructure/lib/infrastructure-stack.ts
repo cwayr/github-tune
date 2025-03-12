@@ -25,8 +25,8 @@ export class InfrastructureStack extends Stack {
     console.log(`Deploying to ${environment} environment`);
     // const isProd = environment === 'prod';
 
-    const apiFunction = new nodejs_lambda.NodejsFunction(this, 'ApiFunction', {
-      functionName: 'ContributionTuneFetcher',
+    const apiFunction = new nodejs_lambda.NodejsFunction(this, 'ct-fetcher', {
+      functionName: 'contributionTuneFetcher',
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'handler',
       memorySize: 512,
@@ -52,14 +52,14 @@ export class InfrastructureStack extends Stack {
       },
     });
 
-    const websiteBucket = new s3.Bucket(this, 'WebsiteBucket', {
-      bucketName: 'ContributionTuneSrc',
+    const websiteBucket = new s3.Bucket(this, 'ct-srcBucket', {
+      bucketName: 'contributionTuneSrc',
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
     });
 
-    const distribution = new cloudfront.Distribution(this, 'WebsiteDistribution', {
+    const distribution = new cloudfront.Distribution(this, 'ct-distribution', {
       defaultBehavior: {
         origin: new origins.S3Origin(websiteBucket),
         viewerProtocolPolicy: 
@@ -76,7 +76,7 @@ export class InfrastructureStack extends Stack {
     });
 
     // Generate a simple config.js file with the function URL
-    const configFile = new s3deploy.BucketDeployment(this, 'ConfigDeployment', {
+    const configFile = new s3deploy.BucketDeployment(this, 'ct-configDeployment', {
       sources: [
         s3deploy.Source.data(
           'config.js', 
@@ -86,7 +86,7 @@ export class InfrastructureStack extends Stack {
       destinationBucket: websiteBucket,
     });
 
-    const websiteDeployment = new s3deploy.BucketDeployment(this, 'WebsiteDeployment', {
+    const websiteDeployment = new s3deploy.BucketDeployment(this, 'ct-websiteDeployment', {
       sources: [s3deploy.Source.asset(path.join(__dirname, frontendBuildPath))],
       destinationBucket: websiteBucket,
       distribution,
@@ -97,14 +97,12 @@ export class InfrastructureStack extends Stack {
     // Make sure config is deployed before the website
     websiteDeployment.node.addDependency(configFile);
 
-    new CfnOutput(this, 'WebsiteURL', {
+    new CfnOutput(this, 'SiteURL', {
       value: `https://${distribution.distributionDomainName}`,
-      description: 'Website URL',
     });
 
-    new CfnOutput(this, 'LambdaFunctionURL', {
+    new CfnOutput(this, 'FetcherLambdaURL', {
       value: functionUrl.url,
-      description: 'Lambda Function URL',
     });
   }
 }

@@ -9,14 +9,15 @@ on:
     types: [published]
 
 env:
-  SVELTE_BUILD: frontend/.svelte-kit/output/client
   DEPLOY_ENV: ${{ github.event_name == 'release' && 'prod' || 'dev' }}
 
 jobs:
-  build-frontend:
+  build-and-deploy:
     runs-on: ubuntu-latest
+    environment: $DEPLOY_ENV
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -24,10 +25,9 @@ jobs:
           node-version: 20
 
       - name: Install pnpm
-        working-directory: ./frontend
         run: npm install -g pnpm
-          
-      - name: Install dependencies
+
+      - name: Install frontend dependencies
         working-directory: ./frontend
         run: pnpm install
         
@@ -35,40 +35,9 @@ jobs:
         working-directory: ./frontend
         run: pnpm run build
 
-      - name: Debug
-        run: |
-          ls -la frontend/.svelte-kit/output
-          ls -la frontend/.svelte-kit/output/client
-          ls -la $SVELTE_BUILD
-        
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-build
-          path: $SVELTE_BUILD
-          if-no-files-found: error
-          
-  deploy-cdk:
-    needs: build-frontend
-    runs-on: ubuntu-latest
-    environment: $DEPLOY_ENV
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install pnpm
-        working-directory: ./frontend
-        run: npm install -g pnpm
-          
-      - name: Download frontend build
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-build
-          path: $SVELTE_BUILD
+      - name: Install infrastructure dependencies
+        working-directory: ./infrastructure
+        run: pnpm install
           
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -76,10 +45,6 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-          
-      - name: Install dependencies
-        working-directory: ./infrastructure
-        run: pnpm install
         
       - name: Deploy infrastructure
         working-directory: ./infrastructure

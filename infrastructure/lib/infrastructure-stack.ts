@@ -19,7 +19,7 @@ export class InfrastructureStack extends Stack {
     super(scope, id, props);
 
     const backendFnsPath = '../../backend/functions'
-    const frontendBuildPath = '../../frontend/.svelte-kit/output/client'
+    const frontendBuildPath = '../../frontend/build'
 
     const environment = this.node.tryGetContext('environment') || 'dev';
     console.log(`Deploying to ${environment} environment`);

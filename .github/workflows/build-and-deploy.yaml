@@ -37,12 +37,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build
-          path: ${{ env.SVELTE_BUILD }}
+          path: $SVELTE_BUILD
           
   deploy-cdk:
     needs: build-frontend
     runs-on: ubuntu-latest
-    environment: ${{ env.DEPLOY_ENV }}
+    environment: $DEPLOY_ENV
     steps:
       - uses: actions/checkout@v4
       
@@ -57,7 +57,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: frontend-build
-          path: ${{ env.SVELTE_BUILD }}
+          path: $SVELTE_BUILD
           
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -76,4 +76,4 @@ jobs:
           npx cdk deploy \
           --all \
           --require-approval never \
-          --context environment=${{ env.DEPLOY_ENV }}
+          --context environment=$DEPLOY_ENV

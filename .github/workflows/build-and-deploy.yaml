@@ -8,13 +8,10 @@ on:
   release:
     types: [published]
 
-env:
-  DEPLOY_ENV: ${{ github.event_name == 'release' && 'prod' || 'dev' }}
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    environment: $DEPLOY_ENV
+    environment: ${{ github.event_name == 'release' && 'prod' || 'dev' }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -52,4 +49,4 @@ jobs:
           npx cdk deploy \
           --all \
           --require-approval never \
-          --context environment=$DEPLOY_ENV
+          --context environment=${{ github.event_name == 'release' && 'prod' || 'dev' }}

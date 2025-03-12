@@ -22,8 +22,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
-          cache-dependency-path: './frontend/pnpm-lock.json'
           
       - name: Install frontend dependencies
         working-directory: ./frontend
@@ -50,8 +48,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
-          cache-dependency-path: './infrastructure/pnpm-lock.json'
           
       - name: Download frontend build
         uses: actions/download-artifact@v4

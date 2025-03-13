@@ -39,7 +39,7 @@ async function fetchContributions() {
     loading = true;
     error = '';
     console.log('Fetching contributions for:', username);
-    const response = await fetch(`${fnUrl}/contributions?username=${encodeURIComponent(username)}`);
+    const response = await fetch(`${fnUrl}contributions?username=${encodeURIComponent(username)}`);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch contributions: ${response.status} ${response.statusText}`);

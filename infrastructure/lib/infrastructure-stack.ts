@@ -1,10 +1,12 @@
 import {
+  Fn,
   Stack,
   Duration,
   CfnOutput,
   StackProps,
   aws_s3 as s3,
   RemovalPolicy,
+  aws_logs as logs,
   aws_lambda as lambda,
   aws_cloudfront as cloudfront,
   aws_s3_deployment as s3deploy,
@@ -31,7 +33,7 @@ export class InfrastructureStack extends Stack {
       handler: 'handler',
       memorySize: 512,
       entry: path.join(
-        __dirname, 
+        __dirname,
         `${backendFnsPath}/contributionFetcher/index.ts`
       ),
       timeout: Duration.seconds(15),
@@ -41,15 +43,17 @@ export class InfrastructureStack extends Stack {
         externalModules: [],
         nodeModules: ['cheerio']
       },
+      logRetention: logs.RetentionDays.ONE_MONTH
     });
 
+    // In infrastructure-stack.ts
     const functionUrl = apiFunction.addFunctionUrl({
       authType: lambda.FunctionUrlAuthType.NONE,
       cors: {
         allowedOrigins: ['*'],
-        allowedMethods: [lambda.HttpMethod.ALL],
-        allowedHeaders: ['*'],
-      },
+        allowedMethods: [lambda.HttpMethod.GET],
+        allowedHeaders: ['content-type']
+      }
     });
 
     const websiteBucket = new s3.Bucket(this, 'ct-srcBucket', {
@@ -61,8 +65,10 @@ export class InfrastructureStack extends Stack {
 
     const distribution = new cloudfront.Distribution(this, 'ct-distribution', {
       defaultBehavior: {
-        origin: new origins.S3Origin(websiteBucket),
-        viewerProtocolPolicy: 
+        origin: new origins.S3Origin(websiteBucket, {
+          originAccessIdentity: new cloudfront.OriginAccessIdentity(this, 'ct-oai')
+        }),
+        viewerProtocolPolicy:
           cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
       defaultRootObject: 'index.html',
@@ -79,7 +85,7 @@ export class InfrastructureStack extends Stack {
     const configFile = new s3deploy.BucketDeployment(this, 'ct-configDeployment', {
       sources: [
         s3deploy.Source.data(
-          'config.js', 
+          'config.js',
           `window.ENV = { VITE_FN_URL: "${functionUrl.url}" };`
         ),
       ],

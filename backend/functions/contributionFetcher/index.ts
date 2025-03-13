@@ -27,7 +27,7 @@ export async function handler(event: any) {
       numWeeks: contributions.weeks.length,
       totalDays: contributions.weeks.reduce((acc, week) => acc + week.days.length, 0)
     });
-    
+
     return {
       statusCode: 200,
       body: JSON.stringify(contributions),

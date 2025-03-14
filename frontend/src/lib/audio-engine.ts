@@ -151,8 +151,8 @@ class AudioEngine {
     }
     
     // Calculate playback duration based on speed setting
-    // Base duration is 300ms but with proper release tail for beautiful sound
-    const duration = (300 / settings.speed) + 100;
+    // Base duration is 240ms but with proper release tail for beautiful sound
+    const duration = (240 / settings.speed) + 100;
     
     // Schedule completion callback
     setTimeout(() => {

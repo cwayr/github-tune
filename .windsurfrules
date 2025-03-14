@@ -2,7 +2,7 @@
 
 This project is a simple website that allows users to enter their GitHub username. The site then produces their contributions graph and allows the user to let it play a short melody based on their commit history.
 
-The code is entirely written in TypeScript.
+The code is entirely written in TypeScript. I am using `pnpm` for package management.
 
 # Project Structure
 

@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio';
+import { handleError } from '../../lib/errors';
 
 export interface Contribution {
   date: string;
@@ -122,12 +123,8 @@ export function parseContributions(html: string, year: number): ContributionYear
   }
 
   return { weeks, year };
-  } catch (error: any) {
-    console.error('Error in parseContributions:', {
-      message: error.message,
-      stack: error.stack,
-      html: html.substring(0, 200)
-    });
-    throw error;
+  } catch (error: unknown) {
+    const errorResponse = handleError(error, 'parseContributions');
+    throw new Error(`Contribution parsing failed: ${errorResponse.message}`);
   }
 }

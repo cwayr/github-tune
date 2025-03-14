@@ -1,11 +1,18 @@
-import { parseContributions } from './parseContributions'
+import { parseContributions } from './parseContributions';
+import { parseRequestParams } from '../../lib/validation';
+import { handleError, type CustomErrorResponse } from '../../lib/errors';
 
-export async function handler(event: any) {
-  const username = event.queryStringParameters?.username;
-  const year = event.queryStringParameters?.year;
+interface LambdaEvent {
+  queryStringParameters: {
+    username: string;
+    year: string;
+  };
+}
 
+export async function handler(event: LambdaEvent) {
   try {
-    // const url = `https://github.com/users/${encodeURIComponent(username)}/contributions?to=${year}-12-31`
+    const { username, year } = parseRequestParams(event.queryStringParameters);
+
     const url = `https://github.com/users/${encodeURIComponent(username)}/contributions`
     console.log('Fetching contributions with url:', url);
     const response = await fetch(url);
@@ -22,7 +29,7 @@ export async function handler(event: any) {
       throw new Error('GitHub response does not contain contribution data');
     }
 
-    const contributions = parseContributions(html, parseInt(year));
+    const contributions = parseContributions(html, year);
     console.log('Successfully parsed contributions:', {
       numWeeks: contributions.weeks.length,
       totalDays: contributions.weeks.reduce((acc, week) => acc + week.days.length, 0)
@@ -32,10 +39,11 @@ export async function handler(event: any) {
       statusCode: 200,
       body: JSON.stringify(contributions),
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorResponse = handleError(error, 'contributionFetcher/handler');
     return {
-      statusCode: 500,
-      body: JSON.stringify({ error: error.message }),
+      statusCode: errorResponse.statusCode,
+      body: JSON.stringify(errorResponse),
     };
   }
 }

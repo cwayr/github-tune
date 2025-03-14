@@ -30,14 +30,14 @@ Root directories:
 
 ## Code Structure and Organization
 - **Follow the Single Responsibility Principle (SRP):** Each file, class, function, or module should have one clearly defined purpose. If a function or file grows too large or handles multiple unrelated tasks, split it into smaller, focused units.
-- **Limit File and Function Length:** Aim for files to be under 300 lines and functions to be under 50 lines. If a file or function exceeds these limits, refactor it into smaller, more manageable pieces.
+- **Limit File and Function Length:** Aim for files to be under 300 lines and functions to be under 50 lines. If a file or function exceeds these limits, refactor it into smaller, more manageable pieces if possible.
 - **Organize Code by Feature:** Use a feature-based folder structure (e.g., `/features/auth`, `/features/dashboard`) rather than a type-based structure (e.g., `/components`, `/services`) to keep related code together and improve scalability.
 - **Avoid Side Effects:** Ensure functions are pure where possible. If side effects are necessary (e.g., API calls, state updates), isolate them and document their impact clearly.
 
 ## Code Efficiency and Refactoring
 - **Refactor Before Adding New Code:** When addressing a problem or adding a feature, first evaluate if existing code can be simplified, reused, or improved to solve the issue. Avoid introducing unnecessary new code.
 - **Remove Dead Code:** Regularly scan for and remove unused variables, functions, or imports. If code is no longer needed, delete it rather than leaving it commented out.
-- **Keep Code DRY (Don\u2019t Repeat Yourself):** Identify opportunities to consolidate duplicate logic into reusable functions, utilities, or components.
+- **Keep Code DRY (Don't Repeat Yourself):** Identify opportunities to consolidate duplicate logic into reusable functions, utilities, or components.
 - **Use Composition Over Inheritance:** Favor composition (e.g., React hooks, utility functions) over inheritance to keep code modular and avoid tight coupling.
 
 ## Best Practices and Consistency
@@ -60,7 +60,7 @@ Root directories:
 - **Write Self-Documenting Code:** Use descriptive names for variables, functions, and files. Avoid cryptic abbreviations unless they are industry-standard (e.g., `i` for loop index).
 - **Add Comments for Complex Logic:** While code should be self-explanatory, add comments to explain *why* complex logic exists, not just *what* it does.
 - **Plan for Scalability:** Design code with future growth in mind. For example, avoid hardcoding values that might need to change, and prefer configuration files or environment variables.
-- **Use Design Patterns Where Applicable:** Apply patterns like Factory, Singleton, or Observer if they simplify the architecture or solve recurring problems. Don\u2019t over-engineer with patterns unnecessarily.
+- **Use Design Patterns Where Applicable:** Apply patterns like Factory, Singleton, or Observer if they simplify the architecture or solve recurring problems. Don't over-engineer with patterns unnecessarily.
 
 ## Testing and Validation
 - **Write Testable Code:** Structure code to be easily testable by keeping functions pure, minimizing dependencies, and using dependency injection where appropriate.
@@ -73,11 +73,11 @@ Root directories:
 - **Minimize Bundle Size:** Be cautious when adding new dependencies. Use tree-shaking, lazy loading, and code-splitting to keep the bundle size small.
 
 ## Collaboration and Version Control
-- **Write Clear Commit Messages:** Suggest commit messages that describe the purpose of changes (e.g., \u201cfeat: add user authentication form validation\u201d or \u201cfix: handle null response in API fetch\u201d).
+- **Write Clear Commit Messages:** Suggest commit messages that describe the purpose of changes (e.g., "feat: add user authentication form validation" or "fix: handle null response in API fetch").
 - **Avoid Large Pull Requests:** Break down changes into smaller, logical commits or PRs to make code reviews easier and reduce merge conflicts.
 - **Document Public APIs:** For reusable modules, components, or utilities, provide JSDoc comments or a README to explain usage, inputs, outputs, and examples.
 
 ## Enforcement and Accountability
 - **Self-Review Generated Code:** After generating code, perform a self-audit to ensure it adheres to these rules before presenting it. Suggest improvements if needed.
-- **Ask for Feedback:** If unsure about a design decision or implementation, ask the user for clarification or preferences (e.g., \u201cWould you prefer a different approach for handling this API call?\u201d).
+- **Ask for Feedback:** If unsure about a design decision or implementation, ask the user for clarification or preferences (e.g., "Would you prefer a different approach for handling this API call?").
 - **Track Rule Violations:** If a rule is violated due to constraints or requirements, document the reason and suggest how to address it in the future.

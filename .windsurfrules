@@ -72,11 +72,6 @@ Root directories:
 - **Avoid Overfetching Data:** When working with APIs, fetch only the data needed for the task. Use pagination, filtering, or GraphQL if applicable.
 - **Minimize Bundle Size:** Be cautious when adding new dependencies. Use tree-shaking, lazy loading, and code-splitting to keep the bundle size small.
 
-## Collaboration and Version Control
-- **Write Clear Commit Messages:** Suggest commit messages that describe the purpose of changes (e.g., "feat: add user authentication form validation" or "fix: handle null response in API fetch").
-- **Avoid Large Pull Requests:** Break down changes into smaller, logical commits or PRs to make code reviews easier and reduce merge conflicts.
-- **Document Public APIs:** For reusable modules, components, or utilities, provide JSDoc comments or a README to explain usage, inputs, outputs, and examples.
-
 ## Enforcement and Accountability
 - **Self-Review Generated Code:** After generating code, perform a self-audit to ensure it adheres to these rules before presenting it. Suggest improvements if needed.
 - **Ask for Feedback:** If unsure about a design decision or implementation, ask the user for clarification or preferences (e.g., "Would you prefer a different approach for handling this API call?").

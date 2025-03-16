@@ -38,6 +38,12 @@ class AudioEngine {
       try {
         console.log('Initializing Tone.js audio engine');
         
+        // Ensure Tone.js context is started
+        if (Tone.context.state !== 'running') {
+          await Tone.start();
+          console.log('Tone.js context started');
+        }
+        
         // Create beautiful polyphonic synthesizer first
         // Using Tone.Synth for a richer sound than the basic oscillator
         this.polySynth = new Tone.PolySynth(Tone.Synth, {
@@ -88,77 +94,93 @@ class AudioEngine {
     settings: PlaybackSettings,
     onComplete: () => void
   ) {
-    if (!this.isInitialized) {
-      await this.initAudio();
-    }
-    
-    // Stop any playing sound
-    this.stopSound();
-    
-    if (week >= contributionData.weeks.length) {
-      onComplete();
-      return;
-    }
-    
-    // Ensure Tone.js is started (required for user interaction)
     try {
-      if (Tone.context.state !== 'running') {
-        console.log('Starting Tone.js context');
-        await Tone.start();
+      // Initialize audio if not already done
+      if (!this.isInitialized) {
+        await this.initAudio();
       }
-      console.log('Tone.js context state:', Tone.context.state);
-    } catch (error) {
-      console.error('Error starting Tone.js context:', error);
-    }
+      
+      // Stop any playing sound
+      this.stopSound();
+      
+      if (week >= contributionData.weeks.length) {
+        onComplete();
+        return;
+      }
+      
+      // Double-check Tone.js is started (required for user interaction)
+      try {
+        if (Tone.context.state !== 'running') {
+          console.log('Starting Tone.js context');
+          await Tone.start();
+        }
+        console.log('Tone.js context state:', Tone.context.state);
+      } catch (error) {
+        console.error('Error starting Tone.js context:', error);
+        // Continue anyway, as we'll catch any playback errors below
+      }
     
     const weekData = contributionData.weeks[week];
     const scale = settings.scale || this.scales.pentatonic;
     
-    // Always play a sound, even if there are no contributions
-    // This ensures every week is highlighted one by one
-    console.log(`Playing week ${week}, has contributions: ${weekData.days.some(day => day.count > 0)}`);
-    
-    // If no contributions, play a soft ambient sound
-    const hasContributions = weekData.days.some(day => day.count > 0);
-    
-    // Gather all notes to play simultaneously as a beautiful chord
-    const notesToPlay: string[] = [];
-    
-    if (hasContributions) {
-      // Map contribution days to notes
-      weekData.days.forEach((day, dayIndex) => {
-        if (day.count > 0) {
-          // Map day index to a note in the selected scale
-          const note = scale.notes[dayIndex % scale.notes.length];
-          notesToPlay.push(note);
-          this.activeNotes.push(note);
-        }
-      });
-    } else {
-      // For weeks with no contributions, play an ambient note
-      const ambientNote = scale.notes[0]; // Use first note of scale
-      notesToPlay.push(ambientNote);
-      this.activeNotes.push(ambientNote);
+    try {
+      // Always play a sound, even if there are no contributions
+      // This ensures every week is highlighted one by one
+      console.log(`Playing week ${week}, has contributions: ${weekData.days.some(day => day.count > 0)}`);
+      
+      // If no contributions, play a soft ambient sound
+      const hasContributions = weekData.days.some(day => day.count > 0);
+      
+      // Gather all notes to play simultaneously as a beautiful chord
+      const notesToPlay: string[] = [];
+      
+      if (hasContributions) {
+        // Map contribution days to notes
+        weekData.days.forEach((day, dayIndex) => {
+          if (day.count > 0) {
+            // Map day index to a note in the selected scale
+            const note = scale.notes[dayIndex % scale.notes.length];
+            notesToPlay.push(note);
+            this.activeNotes.push(note);
+          }
+        });
+      } else {
+        // For weeks with no contributions, play an ambient note
+        const ambientNote = scale.notes[0]; // Use first note of scale
+        notesToPlay.push(ambientNote);
+        this.activeNotes.push(ambientNote);
+      }
+      
+      // Play all notes simultaneously as a chord
+      if (this.polySynth && notesToPlay.length > 0) {
+        this.polySynth.triggerAttackRelease(
+          notesToPlay,
+          '2n', // Half note duration
+          Tone.now()
+        );
+      }
+      
+      // Calculate playback duration based on speed setting
+      // Base duration is 240ms but with proper release tail for beautiful sound
+      const duration = (240 / settings.speed) + 100;
+      
+      // Schedule completion callback
+      setTimeout(() => {
+        this.stopSound();
+        onComplete();
+      }, duration);
+    } catch (error) {
+      console.error('Error playing contribution week:', error);
+      // Call onComplete even if there's an error to ensure playback continues
+      setTimeout(() => {
+        this.stopSound();
+        onComplete();
+      }, 100);
     }
-    
-    // Play all notes simultaneously as a chord
-    if (this.polySynth && notesToPlay.length > 0) {
-      this.polySynth.triggerAttackRelease(
-        notesToPlay,
-        '2n', // Half note duration
-        Tone.now()
-      );
-    }
-    
-    // Calculate playback duration based on speed setting
-    // Base duration is 240ms but with proper release tail for beautiful sound
-    const duration = (240 / settings.speed) + 100;
-    
-    // Schedule completion callback
-    setTimeout(() => {
-      this.stopSound();
-      onComplete();
-    }, duration);
+  } catch (error) {
+    console.error('Error in playContributionWeek:', error);
+    onComplete(); // Ensure callback is called even on error
+  }
   }
   
   public stopSound() {

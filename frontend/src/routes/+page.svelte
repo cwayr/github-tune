@@ -2,6 +2,7 @@
 import { onMount } from 'svelte';
 import ContributionGraph from '../components/ContributionGraph.svelte';
 import PlaybackControls from '../components/PlaybackControls.svelte';
+import Piano from '../components/Piano.svelte';
 import { audioEngine } from '../lib/audio-engine';
 import type { AppState, ContributionYear, PlaybackSettings } from '../config/types';
 
@@ -174,6 +175,8 @@ onMount(() => {
 </div>
 
 <main class="app-container {theme}">
+  <h1>Contribution Melody Piano</h1>
+  <Piano />
   <div class="hero-section {contributionData ? 'compact' : ''}">
     <div class="container">
       <div class="hero-content animate-fadeIn">

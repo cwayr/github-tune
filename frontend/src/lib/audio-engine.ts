@@ -3,38 +3,51 @@ import * as Tone from 'tone';
 
 class AudioEngine {
   private isInitialized = false;
+  private samplesLoaded = false;
   private activeNotes: string[] = [];
-  private polySynth: Tone.PolySynth | null = null;
+  private sampler: Tone.Sampler | null = null;
   private reverb: Tone.Reverb | null = null;
   private chorus: Tone.Chorus | null = null;
   private limiter: Tone.Limiter | null = null;
+  private initPromise: Promise<void> | null = null;
   
   // Predefined musical scales with more expressive note ranges
   private scales: Record<string, MusicScale> = {
     joyful: {
       name: 'Joyful',
-      notes: ['C4', 'E4', 'G4', 'B4', 'C5', 'D5', 'E5', 'G5']
+      notes: ['C4', 'E4', 'F4', 'G4', 'B5', 'C5', 'D5', 'E5']
     },
     melancholy: {
       name: 'Melancholy',
-      notes: ['C4', 'Eb4', 'G4', 'Bb4', 'C5', 'D5', 'Eb5', 'G5']
+      notes: ['A2', 'C4', 'D4', 'E4', 'G4', 'B4', 'C5', 'G5']
     },
-    dreamy: {
-      name: 'Dreamy',
-      notes: ['C4', 'D4', 'E4', 'G4', 'A4', 'C5', 'D5', 'E5']
-    },
-    mysterious: {
-      name: 'Mysterious',
-      notes: ['D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'D5']
-    },
-    ethereal: {
-      name: 'Ethereal',
-      notes: ['F4', 'G4', 'A4', 'B4', 'C5', 'D5', 'E5', 'F5']
-    }
+    // dreamy: {
+    //   name: 'Dreamy',
+    //   notes: ['C4', 'D4', 'E4', 'G4', 'A4', 'C5', 'D5', 'E5']
+    // },
+    // mysterious: {
+    //   name: 'Mysterious',
+    //   notes: ['D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'D5']
+    // },
+    // ethereal: {
+    //   name: 'Ethereal',
+    //   notes: ['F4', 'G4', 'A4', 'B4', 'C5', 'D5', 'E5', 'F5']
+    // }
   };
   
-  private async initAudio() {
-    if (typeof window !== 'undefined' && !this.isInitialized) {
+  private async initAudio(): Promise<void> {
+    // If already initialized or initialization is in progress, return the existing promise
+    if (this.initPromise) {
+      return this.initPromise;
+    }
+    
+    // Create a new initialization promise
+    this.initPromise = new Promise<void>(async (resolve, reject) => {
+      if (typeof window === 'undefined' || this.isInitialized) {
+        resolve();
+        return;
+      }
+      
       try {
         console.log('Initializing Tone.js audio engine');
         
@@ -44,25 +57,32 @@ class AudioEngine {
           console.log('Tone.js context started');
         }
         
-        // Create beautiful polyphonic synthesizer first
-        // Using Tone.Synth for a richer sound than the basic oscillator
-        this.polySynth = new Tone.PolySynth(Tone.Synth, {
-          oscillator: {
-            type: 'sine', // Using simpler oscillator type for better compatibility
-            phase: 0,
+        // Create sampler using static samples
+        this.sampler = new Tone.Sampler({
+          urls: {
+            A2: 'A2v3.ogg',
+            A4: 'A4v3.ogg',
+            C4: 'C4v3.ogg',
+            E4: 'E4v3.ogg',
+            F4: 'F4v3.ogg',
+            G4: 'G4v3.ogg',
+            B4: 'B4v3.ogg',
+            C5: 'C5v4.ogg',
+            D5: 'D5v4.ogg',
+            E5: 'E5v4.ogg',
           },
-          envelope: {
-            attack: 0.02, // Quick attack for plucky sound
-            decay: 0.1,   // Short decay for quicker note release
-            sustain: 0.1,  // Short sustain for plucky feel
-            release: 0.3   // Quick release to allow notes to stop ringing
+          baseUrl: '/piano_samples/',
+          onload: () => {
+            console.log('Piano samples loaded');
+            this.samplesLoaded = true;
+            resolve();
           }
-        });
+        }).toDestination();
         
-        // Create effects for more beautiful sound
+        // Create effects chain
         this.reverb = new Tone.Reverb({
-          decay: 4.0,   // Increased decay for longer reverb
-          wet: 0.6      // Increased wet level for more reverb effect
+          decay: 4.0,
+          wet: 0.6
         }).toDestination();
         
         this.chorus = new Tone.Chorus({
@@ -73,15 +93,25 @@ class AudioEngine {
         
         this.limiter = new Tone.Limiter(-3).connect(this.chorus);
         
-        // Connect synthesizer to effects chain
-        this.polySynth.connect(this.limiter);
-        
         this.isInitialized = true;
         console.log('Tone.js audio engine initialized');
+        
+        // If onload wasn't called after 5 seconds, resolve anyway to prevent hanging
+        setTimeout(() => {
+          if (!this.samplesLoaded) {
+            console.warn('Sample loading timed out, continuing anyway');
+            this.samplesLoaded = true;
+            resolve();
+          }
+        }, 5000);
       } catch (error) {
         console.error('Failed to initialize Tone.js:', error);
+        this.initPromise = null; // Reset promise so initialization can be attempted again
+        reject(new Error(`Audio initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`));
       }
-    }
+    });
+    
+    return this.initPromise;
   }
   
   public getAvailableScales(): MusicScale[] {
@@ -95,10 +125,8 @@ class AudioEngine {
     onComplete: () => void
   ) {
     try {
-      // Initialize audio if not already done
-      if (!this.isInitialized) {
-        await this.initAudio();
-      }
+      // Initialize audio and ensure samples are loaded
+      await this.initAudio();
       
       // Stop any playing sound
       this.stopSound();
@@ -108,30 +136,31 @@ class AudioEngine {
         return;
       }
       
-      // Double-check Tone.js is started (required for user interaction)
-      try {
-        if (Tone.context.state !== 'running') {
+      // Ensure Tone.js is started (required for user interaction)
+      if (Tone.context.state !== 'running') {
+        try {
           console.log('Starting Tone.js context');
           await Tone.start();
+          console.log('Tone.js context state:', Tone.context.state);
+        } catch (error) {
+          console.error('Error starting Tone.js context:', error);
+          throw new Error('Failed to start audio context');
         }
-        console.log('Tone.js context state:', Tone.context.state);
-      } catch (error) {
-        console.error('Error starting Tone.js context:', error);
-        // Continue anyway, as we'll catch any playback errors below
       }
-    
-    const weekData = contributionData.weeks[week];
-    const scale = settings.scale || this.scales.pentatonic;
-    
-    try {
+      
+      // Check if sampler is ready
+      if (!this.sampler || !this.samplesLoaded) {
+        throw new Error('Audio samples not loaded yet');
+      }
+      
+      const weekData = contributionData.weeks[week];
+      const scale = settings.scale;
+      
       // Always play a sound, even if there are no contributions
       // This ensures every week is highlighted one by one
-      console.log(`Playing week ${week}, has contributions: ${weekData.days.some(day => day.count > 0)}`);
-      
-      // If no contributions, play a soft ambient sound
       const hasContributions = weekData.days.some(day => day.count > 0);
       
-      // Gather all notes to play simultaneously as a beautiful chord
+      // Gather all notes to play simultaneously as a chord
       const notesToPlay: string[] = [];
       
       if (hasContributions) {
@@ -152,16 +181,13 @@ class AudioEngine {
       }
       
       // Play all notes simultaneously as a chord
-      if (this.polySynth && notesToPlay.length > 0) {
-        this.polySynth.triggerAttackRelease(
-          notesToPlay,
-          '2n', // Half note duration
-          Tone.now()
-        );
+      if (notesToPlay.length > 0) {
+        notesToPlay.forEach(note => {
+          this.sampler?.triggerAttackRelease(note, '2n', Tone.now());
+        });
       }
       
       // Calculate playback duration based on speed setting
-      // Base duration is 240ms but with proper release tail for beautiful sound
       const duration = (240 / settings.speed) + 100;
       
       // Schedule completion callback
@@ -170,31 +196,29 @@ class AudioEngine {
         onComplete();
       }, duration);
     } catch (error) {
-      console.error('Error playing contribution week:', error);
-      // Call onComplete even if there's an error to ensure playback continues
-      setTimeout(() => {
-        this.stopSound();
-        onComplete();
-      }, 100);
+      console.error('Error in playContributionWeek:', error);
+      this.stopSound();
+      onComplete(); // Ensure callback is called even on error
     }
-  } catch (error) {
-    console.error('Error in playContributionWeek:', error);
-    onComplete(); // Ensure callback is called even on error
-  }
   }
   
   public stopSound() {
-    if (this.polySynth && this.activeNotes.length > 0) {
+    if (this.sampler && this.activeNotes.length > 0) {
       // Release all active notes with a gentle release
-      this.polySynth.releaseAll();
+      this.activeNotes.forEach(note => {
+        this.sampler?.triggerRelease(note);
+      });
       this.activeNotes = [];
     }
   }
   
+  /**
+   * Export audio of the contribution melody (not implemented)
+   * @param contributionData The contribution data to generate audio from
+   * @param settings Playback settings to use for the audio
+   * @returns Promise resolving to a Blob containing the audio file
+   */
   public exportAudio(contributionData: ContributionYear, settings: PlaybackSettings): Promise<Blob> {
-    // This would require Tone.Offline to render audio
-    // Implementation would be more complex with Tone.js
-    // Placeholder for future implementation
     return Promise.reject(new Error('Audio export not implemented yet'));
   }
 }

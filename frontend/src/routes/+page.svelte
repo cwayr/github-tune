@@ -2,7 +2,6 @@
 import { onMount } from 'svelte';
 import ContributionGraph from '../components/ContributionGraph.svelte';
 import PlaybackControls from '../components/PlaybackControls.svelte';
-import Piano from '../components/Piano.svelte';
 import { audioEngine } from '../lib/audio-engine';
 import type { AppState, ContributionYear, PlaybackSettings } from '../config/types';
 
@@ -18,7 +17,7 @@ let playbackSettings: PlaybackSettings = {
 };
 let theme: 'light' | 'dark' = 'light';
 let loading = false;
-let error = '';
+let errorMessage = '';
 let showIntro = true;
 let visualizerMode = false;
 
@@ -38,7 +37,7 @@ function handleSubmit() {
 async function fetchContributions() {
   try {
     loading = true;
-    error = '';
+    errorMessage = '';
     console.log('Fetching contributions for:', username);
     const response = await fetch(`${fnUrl}contributions?username=${encodeURIComponent(username)}`);
     
@@ -47,12 +46,10 @@ async function fetchContributions() {
     }
     
     const jsonText = await response.text();
-    console.log('Raw response:', jsonText);
     
     try {
       // Parse the JSON response and assign it to the contributionData variable
       contributionData = JSON.parse(jsonText);
-      console.log('Parsed contributionData:', contributionData);
       
       // Reset the playback position
       currentPosition = null;
@@ -62,10 +59,9 @@ async function fetchContributions() {
       console.error('Invalid JSON content:', jsonText);
       throw new Error('Invalid response format from server');
     }
-  } catch (error) {
-    console.error('Error fetching contributions:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    error = errorMessage;
+  } catch (err) {
+    console.error('Error fetching contributions:', err);
+    errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
   } finally {
     loading = false;
   }
@@ -83,9 +79,9 @@ async function togglePlay() {
       await Tone.start();
       console.log('Tone.js context started on user interaction');
       startPlayback();
-    } catch (error) {
-      console.error('Failed to start Tone.js:', error);
-      error = 'Failed to start audio. Please try again.';
+    } catch (err) {
+      console.error('Failed to start Tone.js:', err);
+      errorMessage = 'Failed to start audio. Please try again.';
     }
   }
 }
@@ -175,8 +171,7 @@ onMount(() => {
 </div>
 
 <main class="app-container {theme}">
-  <h1>Contribution Melody Piano</h1>
-  <Piano />
+
   <div class="hero-section {contributionData ? 'compact' : ''}">
     <div class="container">
       <div class="hero-content animate-fadeIn">
@@ -212,10 +207,10 @@ onMount(() => {
             </div>
           </form>
           
-          {#if error}
+          {#if errorMessage}
             <div class="error-message">
               <span class="error-icon">⚠️</span>
-              <span>{error}</span>
+              <span>{errorMessage}</span>
             </div>
           {/if}
         </div>

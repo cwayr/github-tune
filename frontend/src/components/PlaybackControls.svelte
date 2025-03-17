@@ -1,20 +1,20 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import type { PlaybackSettings, MusicScale } from '../config/types';
   
-  export let isPlaying: boolean = false;
-  export let settings: PlaybackSettings;
-  export let availableScales: MusicScale[] = [];
-  
-  const dispatch = createEventDispatcher();
+  const { isPlaying = false, settings, availableScales = [], inflate } = $props<{
+    isPlaying: boolean;
+    settings: PlaybackSettings;
+    availableScales: MusicScale[];
+    inflate: (event: string, data?: any) => void;
+  }>();
   
   function togglePlay() {
-    dispatch('togglePlay');
+    inflate('togglePlay');
   }
   
   function updateSpeed(event: Event) {
     const target = event.target as HTMLInputElement;
-    dispatch('updateSettings', { 
+    inflate('updateSettings', { 
       ...settings, 
       speed: parseFloat(target.value) 
     });
@@ -22,7 +22,7 @@
   
   function updateVolume(event: Event) {
     const target = event.target as HTMLInputElement;
-    dispatch('updateSettings', { 
+    inflate('updateSettings', { 
       ...settings, 
       volume: parseFloat(target.value) 
     });
@@ -30,9 +30,9 @@
   
   function selectScale(event: Event) {
     const target = event.target as HTMLSelectElement;
-    const selectedScale = availableScales.find(s => s.name === target.value);
+    const selectedScale = availableScales.find((s: MusicScale) => s.name === target.value);
     if (selectedScale) {
-      dispatch('updateSettings', { 
+      inflate('updateSettings', { 
         ...settings, 
         scale: selectedScale 
       });
@@ -48,7 +48,7 @@
   <div class="control-main">
     <div class="play-control">
       <button 
-        on:click={togglePlay} 
+        onclick={togglePlay} 
         class="play-button {isPlaying ? 'playing' : ''}"
         aria-label={isPlaying ? 'Stop playback' : 'Start playback'}
       >
@@ -71,7 +71,7 @@
             max="2" 
             step="0.1" 
             value={settings.speed} 
-            on:input={updateSpeed} 
+            oninput={updateSpeed} 
             class="slider speed-slider"
           />
           <div class="slider-labels">
@@ -94,7 +94,7 @@
             max="1" 
             step="0.01" 
             value={settings.volume} 
-            on:input={updateVolume} 
+            oninput={updateVolume} 
             class="slider volume-slider"
           />
           <div class="slider-labels">
@@ -109,7 +109,7 @@
         <div class="select-container">
           <select 
             id="scale" 
-            on:change={selectScale} 
+            onchange={selectScale} 
             class="scale-select"
           >
             {#each availableScales as scale}

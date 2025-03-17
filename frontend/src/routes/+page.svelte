@@ -128,7 +128,7 @@ function playWeek(week: number) {
 }
 
 // Update playback settings
-function updateSettings(event: CustomEvent) {
+function updateSettings(event: CustomEvent | { detail: any }) {
   playbackSettings = event.detail;
 }
 
@@ -249,8 +249,13 @@ onMount(() => {
               {isPlaying}
               settings={playbackSettings}
               availableScales={audioEngine.getAvailableScales()}
-              on:togglePlay={togglePlay}
-              on:updateSettings={updateSettings}
+              inflate={(event, data) => {
+                if (event === 'togglePlay') {
+                  togglePlay();
+                } else if (event === 'updateSettings' && data) {
+                  updateSettings({ detail: data });
+                }
+              }}
             />
           </div>
         </div>

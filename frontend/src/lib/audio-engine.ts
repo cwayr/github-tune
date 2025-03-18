@@ -6,10 +6,8 @@ class AudioEngine {
   private samplesLoaded = false;
   private activeNotes: string[] = [];
   private sampler: Tone.Sampler | null = null;
-  private reverb: Tone.Reverb | null = null;
-  private chorus: Tone.Chorus | null = null;
-  private limiter: Tone.Limiter | null = null;
   private initPromise: Promise<void> | null = null;
+  private startTime: number | null = null;
   
   // Predefined musical scales with more expressive note ranges
   private scales: Record<string, MusicScale> = {
@@ -78,20 +76,6 @@ class AudioEngine {
             resolve();
           }
         }).toDestination();
-        
-        // // Create effects chain
-        // this.reverb = new Tone.Reverb({
-        //   decay: 4.0,
-        //   wet: 0.6
-        // }).toDestination();
-        
-        // this.chorus = new Tone.Chorus({
-        //   frequency: 1.5,
-        //   depth: 0.2,
-        //   wet: 0.2
-        // }).connect(this.reverb);
-        
-        // this.limiter = new Tone.Limiter(-3).connect(this.chorus);
         
         this.isInitialized = true;
         console.log('Tone.js audio engine initialized');
@@ -182,6 +166,7 @@ class AudioEngine {
       
       // Play all notes simultaneously as a chord
       if (notesToPlay.length > 0) {
+        this.startTime = Tone.now();
         notesToPlay.forEach(note => {
           this.sampler?.triggerAttackRelease(note, '2n', Tone.now());
         });
@@ -195,11 +180,24 @@ class AudioEngine {
         this.stopSound();
         onComplete();
       }, duration);
+      
+      // Update playback progress
+      this.updatePlaybackProgress(duration);
     } catch (error) {
       console.error('Error in playContributionWeek:', error);
       this.stopSound();
       onComplete(); // Ensure callback is called even on error
     }
+  }
+  
+  private updatePlaybackProgress(duration: number) {
+    const intervalId = setInterval(() => {
+      if (!this.startTime) return;
+      const elapsed = Tone.now() - this.startTime;
+      if (elapsed >= duration) {
+        clearInterval(intervalId);
+      }
+    }, 100);
   }
   
   public stopSound() {
@@ -210,6 +208,7 @@ class AudioEngine {
       });
       this.activeNotes = [];
     }
+    this.startTime = null;
   }
   
   /**

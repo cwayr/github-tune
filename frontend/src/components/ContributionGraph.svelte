@@ -1,12 +1,33 @@
 <script lang="ts">
-import { createEventDispatcher } from 'svelte';
 import type { ContributionYear } from '../config/types';
+// import { playbackTime, totalDuration } from '$lib/audio-engine';
 
 export let contributionData: ContributionYear | null = null;
 export let currentPosition: { week: number; day: number } | null = null;
 export let theme: 'light' | 'dark' | 'custom' = 'light';
 
-const dispatch = createEventDispatcher();
+let weeksContainer: HTMLDivElement;
+
+// Track when currentPosition changes
+$: if (currentPosition && weeksContainer) {
+  // Get all week elements
+  const weekElements = weeksContainer.querySelectorAll('.week');
+  if (weekElements.length > 0 && currentPosition.week < weekElements.length) {
+    // Get the current active week element
+    const activeWeekElement = weekElements[currentPosition.week];
+    if (activeWeekElement) {
+      // Calculate position to center the active week
+      const weekLeft = (activeWeekElement as HTMLElement).offsetLeft;
+      const scrollPosition = weekLeft - (weeksContainer.clientWidth / 2) + ((activeWeekElement as HTMLElement).offsetWidth / 2);
+      
+      // Scroll to position
+      weeksContainer.scrollTo({
+        left: Math.max(0, scrollPosition),
+        behavior: 'smooth'
+      });
+    }
+  }
+}
 
 function getContributionColor(count: number): string {
   if (theme === 'dark') {
@@ -59,7 +80,7 @@ function isActiveWeek(week: number): boolean {
         <div>Sun</div>
       </div>
 
-      <div class="weeks-container">
+      <div class="weeks-container" bind:this={weeksContainer}>
         {#each contributionData.weeks as week, weekIndex}
           <div class="week {isActiveWeek(weekIndex) ? 'active-week-container' : ''}">
             {#each week.days as day, dayIndex}
@@ -151,26 +172,32 @@ function isActiveWeek(week: number): boolean {
     align-items: stretch;
     padding: 1.5rem;
     background-color: var(--surface);
+    margin: 10px 0;
   }
 
   .weekday-labels {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding-right: 0.75rem;
+    padding: 15px 0.75rem 15px 0;
     font-size: 0.7rem;
     color: var(--text-secondary);
     font-weight: 500;
   }
 
   .weeks-container {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    padding: 15px 60px 15px 0;
     display: flex;
     gap: 3px;
     margin-top: 2px;
+    max-height: fit-content;
   }
 
   .week {
-    display: flex;
+    display: inline-flex;
     flex-direction: column;
     gap: 3px;
   }
@@ -187,6 +214,11 @@ function isActiveWeek(week: number): boolean {
     transform: scale(1.3);
     z-index: 20;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  }
+  
+  .active-week {
+    outline: 2px solid #4e89e8;
+    z-index: 10;
   }
 
   .day-cell .tooltip {
@@ -223,6 +255,8 @@ function isActiveWeek(week: number): boolean {
   .active-week-container {
     position: relative;
     z-index: 10;
+    padding: 8px 0;
+    margin: -8px 0;
   }
 
   .active-week-container::before {
@@ -230,9 +264,9 @@ function isActiveWeek(week: number): boolean {
     position: absolute;
     left: -3px;
     right: -3px;
-    top: -3px;
-    bottom: -3px;
-    background: var(--primary-gradient-transparent);
+    top: -8px;
+    bottom: -8px;
+    background: transparent;
     border-radius: 4px;
     pointer-events: none;
     z-index: 1;

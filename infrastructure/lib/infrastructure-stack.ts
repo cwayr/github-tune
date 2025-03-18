@@ -81,6 +81,8 @@ export class InfrastructureStack extends Stack {
       ],
     });
 
+
+    console.log('VITE FN URL output ->', functionUrl.url)
     // Generate a simple config.js file with the function URL
     const configFile = new s3deploy.BucketDeployment(this, 'ct-configDeployment', {
       sources: [

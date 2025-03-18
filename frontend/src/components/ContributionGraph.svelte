@@ -1,6 +1,5 @@
 <script lang="ts">
 import type { ContributionYear } from '../config/types';
-// import { playbackTime, totalDuration } from '$lib/audio-engine';
 
 export let contributionData: ContributionYear | null = null;
 export let currentPosition: { week: number; day: number } | null = null;

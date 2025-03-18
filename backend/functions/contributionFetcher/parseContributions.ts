@@ -12,7 +12,6 @@ export interface ContributionWeek {
 
 export interface ContributionYear {
   weeks: ContributionWeek[];
-  year: number;
 }
 
 const levelToCount = (level: string): number => {
@@ -26,7 +25,7 @@ const levelToCount = (level: string): number => {
   }
 };
 
-export function parseContributions(html: string, year: number): ContributionYear {
+export function parseContributions(html: string): ContributionYear {
   try {
     console.log('in parse contributions');
     console.log('html content:', html.substring(0, 200) + '...'); // Log first 200 chars of HTML
@@ -122,7 +121,7 @@ export function parseContributions(html: string, year: number): ContributionYear
     weeks[weekIndex].days = week;
   }
 
-  return { weeks, year };
+  return { weeks };
   } catch (error: unknown) {
     const errorResponse = handleError(error, 'parseContributions');
     throw new Error(`Contribution parsing failed: ${errorResponse.message}`);

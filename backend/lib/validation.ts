@@ -1,18 +1,19 @@
-export function parseRequestParams(params: unknown): { username: string; year: number } {
+import { FetcherLambdaParams } from '../types'
+
+export function parseRequestParams(params: unknown): FetcherLambdaParams {
   if (typeof params !== 'object' || !params) {
     throw new Error('Invalid request parameters');
   }
   
-  const { username, year } = params as { username?: unknown; year?: unknown };
-  
-  if (typeof username !== 'string' || typeof year !== 'string') {
-    throw new Error('Missing required parameters');
+  const { username } = params as FetcherLambdaParams;
+
+  if (username === undefined) {
+    throw new Error(`Missing required parameters. Received: ${JSON.stringify(params)}`);
   }
-  
-  const parsedYear = parseInt(year);
-  if (isNaN(parsedYear)) {
-    throw new Error('Invalid year parameter');
+
+  if (typeof username !== 'string') {
+    throw new Error('Username must be a string');
   }
-  
-  return { username, year: parsedYear };
+
+  return { username };
 }

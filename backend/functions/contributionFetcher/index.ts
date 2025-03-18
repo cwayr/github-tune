@@ -1,17 +1,15 @@
 import { parseContributions } from './parseContributions';
 import { parseRequestParams } from '../../lib/validation';
 import { handleError, type CustomErrorResponse } from '../../lib/errors';
+import { FetcherLambdaParams } from '../../types'
 
 interface LambdaEvent {
-  queryStringParameters: {
-    username: string;
-    year: string;
-  };
+  queryStringParameters: FetcherLambdaParams
 }
 
 export async function handler(event: LambdaEvent) {
   try {
-    const { username, year } = parseRequestParams(event.queryStringParameters);
+    const { username } = parseRequestParams(event.queryStringParameters);
 
     const url = `https://github.com/users/${encodeURIComponent(username)}/contributions`
     console.log('Fetching contributions with url:', url);
@@ -29,7 +27,7 @@ export async function handler(event: LambdaEvent) {
       throw new Error('GitHub response does not contain contribution data');
     }
 
-    const contributions = parseContributions(html, year);
+    const contributions = parseContributions(html);
     console.log('Successfully parsed contributions:', {
       numWeeks: contributions.weeks.length,
       totalDays: contributions.weeks.reduce((acc, week) => acc + week.days.length, 0)

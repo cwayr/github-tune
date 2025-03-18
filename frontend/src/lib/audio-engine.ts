@@ -79,19 +79,19 @@ class AudioEngine {
           }
         }).toDestination();
         
-        // Create effects chain
-        this.reverb = new Tone.Reverb({
-          decay: 4.0,
-          wet: 0.6
-        }).toDestination();
+        // // Create effects chain
+        // this.reverb = new Tone.Reverb({
+        //   decay: 4.0,
+        //   wet: 0.6
+        // }).toDestination();
         
-        this.chorus = new Tone.Chorus({
-          frequency: 1.5,
-          depth: 0.2,
-          wet: 0.2
-        }).connect(this.reverb);
+        // this.chorus = new Tone.Chorus({
+        //   frequency: 1.5,
+        //   depth: 0.2,
+        //   wet: 0.2
+        // }).connect(this.reverb);
         
-        this.limiter = new Tone.Limiter(-3).connect(this.chorus);
+        // this.limiter = new Tone.Limiter(-3).connect(this.chorus);
         
         this.isInitialized = true;
         console.log('Tone.js audio engine initialized');

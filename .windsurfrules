@@ -31,7 +31,6 @@ Root directories:
 ## Code Structure and Organization
 - **Follow the Single Responsibility Principle (SRP):** Each file, class, function, or module should have one clearly defined purpose. If a function or file grows too large or handles multiple unrelated tasks, split it into smaller, focused units.
 - **Limit File and Function Length:** Aim for files to be under 300 lines and functions to be under 50 lines. If a file or function exceeds these limits, refactor it into smaller, more manageable pieces if possible.
-- **Organize Code by Feature:** Use a feature-based folder structure (e.g., `/features/auth`, `/features/dashboard`) rather than a type-based structure (e.g., `/components`, `/services`) to keep related code together and improve scalability.
 - **Avoid Side Effects:** Ensure functions are pure where possible. If side effects are necessary (e.g., API calls, state updates), isolate them and document their impact clearly.
 
 ## Code Efficiency and Refactoring
@@ -42,10 +41,6 @@ Root directories:
 
 ## Best Practices and Consistency
 - **Adhere to TypeScript Best Practices:** Use strict typing, avoid `any` types, and leverage interfaces or types to enforce contracts between components, functions, and modules.
-- **Follow a Consistent Code Style:** Use a linter (e.g., ESLint) and formatter (e.g., Prettier) to enforce consistent naming conventions, formatting, and style. For example:
-  - Use camelCase for variables and functions.
-  - Use PascalCase for classes and React components.
-  - Use UPPER_SNAKE_CASE for constants.
 - **Modularize Code:** Break down complex logic into smaller modules or utilities that can be imported and reused across the app.
 - **Use Modern TypeScript Features:** Leverage features like optional chaining (`?.`), nullish coalescing (`??`), and template literal types to write cleaner, safer code.
 - **Keep Dependencies Up-to-Date:** Always check for and use the latest stable versions of libraries (e.g., React, TypeScript, etc.) and tools. Reference official documentation or npm trends to ensure compatibility and security.

@@ -188,11 +188,18 @@ function isActiveWeek(week: number): boolean {
     overflow-x: auto;
     overflow-y: hidden;
     scroll-behavior: smooth;
-    padding: 15px 60px 15px 0;
+    padding: 15px 0 15px 0;
     display: flex;
     gap: 3px;
     margin-top: 2px;
     max-height: fit-content;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+  
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .weeks-container::-webkit-scrollbar {
+    display: none;
   }
 
   .week {

@@ -3,7 +3,7 @@ import { onMount } from 'svelte';
 import ContributionGraph from '../components/ContributionGraph.svelte';
 import PlaybackControls from '../components/PlaybackControls.svelte';
 import { audioEngine } from '../lib/audio-engine';
-import type { AppState, ContributionYear, PlaybackSettings } from '../config/types';
+import type { ContributionYear, PlaybackSettings } from '../config/types';
 
 // State variables
 let username = '';
@@ -22,7 +22,7 @@ let showIntro = true;
 let visualizerMode = false;
 
 // API URL
-const fnUrl = import.meta.env.VITE_FN_URL || 'https://mbmavarqr6s4kqsvpv7g57zqca0gzhtp.lambda-url.us-east-1.on.aws/';
+const fnUrl = import.meta.env.VITE_FN_URL || '';
 console.log('Frontend FN URL:', fnUrl);
 
 // Handle form submission
@@ -176,12 +176,12 @@ onMount(() => {
     <div class="container">
       <div class="hero-content animate-fadeIn">
         <h1 class="site-title">
-          <span class="gradient-text" data-text="Contribution">Contribution</span> Melody
+          <span class="gradient-text" data-text="GitHub">GitHub</span> Tune
         </h1>
         
         {#if showIntro && !contributionData}
           <p class="intro-text animate-slideInUp delay-100">
-            Transform your GitHub contributions into music. Enter your username to hear your code's melody.
+            Transform your GitHub contributions into music. Enter your username to hear your personalized melody.
           </p>
         {/if}
         
@@ -224,7 +224,7 @@ onMount(() => {
         <div class="header-row animate-fadeIn">
           <h2 class="section-title">
             <span class="username">@{username}'s</span> 
-            <span class="text-gradient">Contribution Melody</span>
+            <span class="text-gradient">GitHub Tune</span>
           </h2>
           <button on:click={toggleTheme} class="theme-toggle" aria-label="Toggle dark mode">
             <span class="toggle-icon">{theme === 'light' ? '🌙' : '☀️'}</span>
@@ -266,27 +266,17 @@ onMount(() => {
           </div>
           
           <div class="card-body">
-            <div class="share-link-container">
-              <div class="link-field">
-                <input
-                  type="text"
-                  readonly
-                  value={generateShareLink()}
-                  class="share-input"
-                  aria-label="Shareable link"
-                />
-                <button
-                  on:click={copyShareLink}
-                  class="btn btn-secondary copy-button"
-                  aria-label="Copy link to clipboard"
-                >
-                  <span class="copy-icon">📋</span>
-                  <span>Copy</span>
-                </button>
-              </div>
-            </div>
-            
+
             <div class="social-share-container">
+              <button
+                on:click={copyShareLink}
+                class="btn btn-secondary copy-button shadow-hover"
+                aria-label="Copy link to clipboard"
+              >
+                <span class="copy-icon">📋</span>
+                <span>Copy link</span>
+              </button>
+
               <a
                 href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Listen to the melody of my GitHub contributions! ${generateShareLink()}`)}`}
                 class="btn-social twitter shadow-hover"
@@ -318,8 +308,8 @@ onMount(() => {
 
 <footer class="app-footer">
   <div class="container">
-    <p>Created with <span class="heart">♥</span> using Tone.js and Svelte</p>
-    <p class="footer-note">Turn your code contributions into music</p>
+    <p>Created with Tone.js and Svelte.</p>
+    <p class="footer-note">Piano samples from Alexander Holm's <b><a href="https://archive.org/details/SalamanderGrandPianoV3" target="_blank" rel="noopener noreferrer">Salamander Grand Piano</a></b>.</p>
   </div>
 </footer>
 
@@ -522,6 +512,10 @@ onMount(() => {
     transform: rotate(20deg) scale(1.1);
     box-shadow: var(--shadow-lg);
   }
+
+  :global(body.dark-mode) .theme-toggle {
+    background-color: var(--surface-dark);
+  }
   
   .grid-layout {
     display: grid;
@@ -618,7 +612,7 @@ onMount(() => {
   }
   
   .twitter {
-    background-color: #1DA1F2;
+    background-color: #000000;
   }
   
   .facebook {

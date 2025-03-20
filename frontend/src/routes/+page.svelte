@@ -12,8 +12,11 @@ let isPlaying = false;
 let currentPosition: { week: number; day: number } | null = null;
 let playbackSettings: PlaybackSettings = {
   speed: 1.0,
-  volume: 0.5,
-  scale: audioEngine.getAvailableScales()[0]
+  scale: audioEngine.getAvailableScales()[0],
+  harmony: {
+    enabled: true,
+    name: 'simple'
+  }
 };
 let theme: 'light' | 'dark' = 'light';
 let loading = false;

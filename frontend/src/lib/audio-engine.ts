@@ -1,4 +1,5 @@
 import type { ContributionYear, MusicScale, PlaybackSettings } from '../config/types';
+import { getHarmonyByName, getHarmonyChord } from './harmonies';
 import * as Tone from 'tone';
 
 class AudioEngine {
@@ -8,6 +9,8 @@ class AudioEngine {
   private sampler: Tone.Sampler | null = null;
   private initPromise: Promise<void> | null = null;
   private startTime: number | null = null;
+  private lastHarmonyIndex: number = -1; // Track the last harmony index played
+  private readonly FIXED_VOLUME = 0.7; // Fixed volume level (0.0 to 1.0)
   
   // Predefined musical scales with more expressive note ranges
   private scales: Record<string, MusicScale> = {
@@ -58,6 +61,8 @@ class AudioEngine {
         // Create sampler using static samples
         this.sampler = new Tone.Sampler({
           urls: {
+            C2: 'C2v3.ogg',
+            A1: 'A1v3.ogg',
             A2: 'A2v3.ogg',
             A4: 'A4v3.ogg',
             C4: 'C4v3.ogg',
@@ -65,16 +70,17 @@ class AudioEngine {
             F4: 'F4v3.ogg',
             G4: 'G4v3.ogg',
             B4: 'B4v3.ogg',
-            C5: 'C5v4.ogg',
-            D5: 'D5v4.ogg',
-            E5: 'E5v4.ogg'
+            C5: 'C5v3.ogg',
+            D5: 'D5v3.ogg',
+            E5: 'E5v3.ogg'
           },
           baseUrl: '/piano_samples/',
           onload: () => {
             console.log('Piano samples loaded');
             this.samplesLoaded = true;
             resolve();
-          }
+          },
+          volume: this.FIXED_VOLUME // Set fixed volume
         }).toDestination();
         
         this.isInitialized = true;
@@ -109,6 +115,11 @@ class AudioEngine {
     onComplete: () => void
   ) {
     try {
+      // Reset the last harmony index when starting from week 0
+      if (week === 0) {
+        this.lastHarmonyIndex = -1;
+      }
+      
       // Initialize audio and ensure samples are loaded
       await this.initAudio();
       
@@ -140,13 +151,11 @@ class AudioEngine {
       const weekData = contributionData.weeks[week];
       const scale = settings.scale;
       
-      // Always play a sound, even if there are no contributions
-      // This ensures every week is highlighted one by one
-      const hasContributions = weekData.days.some(day => day.count > 0);
-      
       // Gather all notes to play simultaneously as a chord
       const notesToPlay: string[] = [];
       
+      // First, handle contributions (always play if they exist)
+      const hasContributions = weekData.days.some(day => day.count > 0);
       if (hasContributions) {
         // Map contribution days to notes
         weekData.days.forEach((day, dayIndex) => {
@@ -157,18 +166,39 @@ class AudioEngine {
             this.activeNotes.push(note);
           }
         });
-      } else {
-        // For weeks with no contributions, play an ambient note
-        const ambientNote = scale.notes[0]; // Use first note of scale
-        notesToPlay.push(ambientNote);
-        this.activeNotes.push(ambientNote);
+      }
+      
+      // Second, handle harmony (independently of contributions)
+      if (settings.harmony.enabled) {
+        const harmony = getHarmonyByName(settings.harmony.name);
+        const FIXED_INTERVAL = 8; // Fixed 8-week interval for harmony changes
+        
+        // Calculate which chord in the progression to use based on weekIndex and fixed interval
+        const currentHarmonyIndex = Math.floor(week / FIXED_INTERVAL) % harmony.chords.length;
+        
+        // Only play the chord if it has changed or it's the first one
+        if (currentHarmonyIndex !== this.lastHarmonyIndex) {
+          const chord = harmony.chords[currentHarmonyIndex];
+          
+          // Add all notes from the chord
+          chord.notes.forEach(note => {
+            notesToPlay.push(note);
+            this.activeNotes.push(note);
+          });
+          
+          // Update the last harmony index
+          this.lastHarmonyIndex = currentHarmonyIndex;
+          
+          // Log which chord is playing
+          console.log(`Playing harmony chord for week ${week}: ${chord.notes.join(', ')} (chord ${currentHarmonyIndex + 1} of ${harmony.chords.length})`);
+        }
       }
       
       // Play all notes simultaneously as a chord
       if (notesToPlay.length > 0) {
         this.startTime = Tone.now();
         notesToPlay.forEach(note => {
-          this.sampler?.triggerAttackRelease(note, '2n', Tone.now());
+          this.sampler?.triggerAttackRelease(note, '1n', Tone.now());
         });
       }
       

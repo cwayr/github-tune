@@ -17,10 +17,15 @@ export interface MusicScale {
   notes: string[];
 }
 
+export interface HarmonySettings {
+  enabled: boolean;
+  name: string;
+}
+
 export interface PlaybackSettings {
   speed: number;
-  volume: number;
   scale: MusicScale;
+  harmony: HarmonySettings;
 }
 
 export type Theme = 'light' | 'dark' | 'custom';

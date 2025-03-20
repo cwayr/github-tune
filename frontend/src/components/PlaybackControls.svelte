@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PlaybackSettings, MusicScale } from '../config/types';
+  import { getAvailableHarmonies, type Harmony } from '../lib/harmonies';
   
   const { isPlaying = false, settings, availableScales = [], inflate } = $props<{
     isPlaying: boolean;
@@ -7,6 +8,9 @@
     availableScales: MusicScale[];
     inflate: (event: string, data?: any) => void;
   }>();
+  
+  // Get all available harmonies
+  const availableHarmonies = getAvailableHarmonies();
   
   function togglePlay() {
     inflate('togglePlay');
@@ -20,13 +24,7 @@
     });
   }
   
-  function updateVolume(event: Event) {
-    const target = event.target as HTMLInputElement;
-    inflate('updateSettings', { 
-      ...settings, 
-      volume: parseFloat(target.value) 
-    });
-  }
+
   
   function selectScale(event: Event) {
     const target = event.target as HTMLSelectElement;
@@ -38,6 +36,29 @@
       });
     }
   }
+  
+  function toggleHarmony() {
+    inflate('updateSettings', {
+      ...settings,
+      harmony: {
+        ...settings.harmony,
+        enabled: !settings.harmony.enabled
+      }
+    });
+  }
+  
+  function selectHarmony(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    inflate('updateSettings', {
+      ...settings,
+      harmony: {
+        ...settings.harmony,
+        name: target.value
+      }
+    });
+  }
+  
+
 </script>
 
 <div class="playback-controls">
@@ -58,6 +79,7 @@
     </div>
     
     <div class="controls-grid">
+      <!-- Speed and Harmony in the first row -->
       <div class="control-section">
         <label for="speed" class="control-label">
           <span class="label-text">Speed</span>
@@ -81,29 +103,42 @@
         </div>
       </div>
 
-      <div class="control-section">
-        <label for="volume" class="control-label">
-          <span class="label-text">Volume</span>
-          <span class="value-badge">{Math.round(settings.volume * 100)}%</span>
-        </label>
-        <div class="slider-container">
-          <input 
-            id="volume" 
-            type="range" 
-            min="0" 
-            max="1" 
-            step="0.01" 
-            value={settings.volume} 
-            oninput={updateVolume} 
-            class="slider volume-slider"
-          />
-          <div class="slider-labels">
-            <span>0%</span>
-            <span>100%</span>
+      <!-- Harmony controls -->
+      <div class="control-section harmony-section">
+        <div class="harmony-header">
+          <label for="harmony" class="control-label">Harmony</label>
+          <label class="toggle-switch">
+            <input 
+              type="checkbox" 
+              checked={settings.harmony.enabled}
+              onchange={toggleHarmony}
+            />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        
+        <div class="harmony-controls" class:disabled={!settings.harmony.enabled}>
+          <div class="select-container">
+            <select 
+              id="harmony" 
+              onchange={selectHarmony} 
+              class="harmony-select"
+              disabled={!settings.harmony.enabled}
+            >
+              {#each availableHarmonies as harmony}
+                <option value={harmony.name.toLowerCase()} selected={settings.harmony.name === harmony.name.toLowerCase()}>
+                  {harmony.name}
+                </option>
+              {/each}
+            </select>
+            <span class="select-arrow">▼</span>
           </div>
+          
+
         </div>
       </div>
 
+      <!-- Mood in the second row -->
       <div class="control-section scale-section">
         <label for="scale" class="control-label">Mood</label>
         <div class="select-container">
@@ -197,6 +232,75 @@
     gap: 1.5rem;
   }
   
+  /* Harmony section styles are now handled in media queries */
+  
+  .harmony-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .harmony-controls {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+  
+  .harmony-controls.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  
+  
+  /* Toggle switch styles */
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+  }
+  
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+  }
+  
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+  }
+  
+  .toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+  }
+  
+  input:checked + .toggle-slider {
+    background-color: var(--primary);
+  }
+  
+  input:checked + .toggle-slider:before {
+    transform: translateX(26px);
+  }
+  
   @media (min-width: 640px) {
     .controls-grid {
       grid-template-columns: 1fr 1fr;
@@ -204,6 +308,15 @@
     
     .scale-section {
       grid-column: span 2;
+    }
+  }
+  
+  @media (max-width: 639px) {
+    /* On mobile, stack the controls vertically */
+    .harmony-section {
+      border-top: 1px solid rgba(0, 0, 0, 0.05);
+      padding-top: 1.5rem;
+      margin-top: 0.5rem;
     }
   }
   
@@ -233,6 +346,7 @@
   
   .slider {
     -webkit-appearance: none;
+    appearance: none;
     width: 100%;
     height: 8px;
     border-radius: 4px;

@@ -13,7 +13,7 @@ class AudioEngine {
   private scales: Record<string, MusicScale> = {
     joyful: {
       name: 'Joyful',
-      notes: ['C4', 'E4', 'F4', 'G4', 'B5', 'C5', 'D5', 'E5']
+      notes: ['C4', 'E4', 'F4', 'G4', 'B4', 'C5', 'D5', 'E5']
     },
     melancholy: {
       name: 'Melancholy',
@@ -50,7 +50,7 @@ class AudioEngine {
         console.log('Initializing Tone.js audio engine');
         
         // Ensure Tone.js context is started
-        if (Tone.context.state !== 'running') {
+        if (Tone.getContext().state !== 'running') {
           await Tone.start();
           console.log('Tone.js context started');
         }
@@ -67,7 +67,7 @@ class AudioEngine {
             B4: 'B4v3.ogg',
             C5: 'C5v4.ogg',
             D5: 'D5v4.ogg',
-            E5: 'E5v4.ogg',
+            E5: 'E5v4.ogg'
           },
           baseUrl: '/piano_samples/',
           onload: () => {
@@ -121,11 +121,11 @@ class AudioEngine {
       }
       
       // Ensure Tone.js is started (required for user interaction)
-      if (Tone.context.state !== 'running') {
+      if (Tone.getContext().state !== 'running') {
         try {
           console.log('Starting Tone.js context');
           await Tone.start();
-          console.log('Tone.js context state:', Tone.context.state);
+          console.log('Tone.js context state:', Tone.getContext().state);
         } catch (error) {
           console.error('Error starting Tone.js context:', error);
           throw new Error('Failed to start audio context');

@@ -138,9 +138,9 @@ function isActiveWeek(week: number): boolean {
   }
 
   .legend-color {
-    width: 12px;
-    height: 12px;
-    border-radius: 2px;
+    width: 15px;
+    height: 15px;
+    border-radius: 3px;
   }
 
   .legend-label {
@@ -172,14 +172,15 @@ function isActiveWeek(week: number): boolean {
     padding: 1.5rem;
     background-color: var(--surface);
     margin: 10px 0;
+    min-height: 180px;
   }
 
   .weekday-labels {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 15px 0.75rem 15px 0;
-    font-size: 0.7rem;
+    padding: 20px 0.75rem 20px 0;
+    font-size: 0.8rem;
     color: var(--text-secondary);
     font-weight: 500;
   }
@@ -188,9 +189,9 @@ function isActiveWeek(week: number): boolean {
     overflow-x: auto;
     overflow-y: hidden;
     scroll-behavior: smooth;
-    padding: 15px 0 15px 0;
+    padding: 20px 0 20px 0;
     display: flex;
-    gap: 3px;
+    gap: 4px;
     margin-top: 2px;
     max-height: fit-content;
     scrollbar-width: none; /* Firefox */
@@ -205,13 +206,13 @@ function isActiveWeek(week: number): boolean {
   .week {
     display: inline-flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 4px;
   }
 
   .day-cell {
-    width: 12px;
-    height: 12px;
-    border-radius: 2px;
+    width: 15px;
+    height: 15px;
+    border-radius: 3px;
     position: relative;
     transition: all 0.2s ease;
   }
@@ -268,12 +269,12 @@ function isActiveWeek(week: number): boolean {
   .active-week-container::before {
     content: '';
     position: absolute;
-    left: -3px;
-    right: -3px;
-    top: -8px;
-    bottom: -8px;
+    left: -4px;
+    right: -4px;
+    top: -10px;
+    bottom: -10px;
     background: transparent;
-    border-radius: 4px;
+    border-radius: 8px;
     pointer-events: none;
     z-index: 1;
     animation: pulse 2s infinite;

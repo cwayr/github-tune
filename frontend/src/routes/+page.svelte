@@ -25,7 +25,7 @@ let showIntro = true;
 let visualizerMode = false;
 
 // API URL
-const fnUrl = import.meta.env.VITE_FN_URL || '';
+const fnUrl = import.meta.env.VITE_FN_URL || 'https://mbmavarqr6s4kqsvpv7g57zqca0gzhtp.lambda-url.us-east-1.on.aws/';
 console.log('Frontend FN URL:', fnUrl);
 
 // Handle form submission

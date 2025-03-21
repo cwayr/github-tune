@@ -1,58 +1,93 @@
 /**
- * Harmonies for GitHub contribution melodies
+ * Harmonies and scales for GitHub contribution melodies
  * Each harmony is a progression of chord notes that will play at specified intervals
  */
+import type { MusicScale } from '../config/types';
 
 export interface Chord {
   notes: string[];
+  scale: string[];
 }
 
 export interface Harmony {
   name: string;
-  description: string;
   chords: Chord[];
+}
+
+export const simpleScales: Record<string, MusicScale> = {
+  joyful: {
+    name: 'Joyful',
+    notes: ['C4', 'E4', 'G4', 'B4', 'D5', 'E5', 'G5', 'E6']
+  },
+  melancholy: {
+    name: 'Melancholy',
+    notes: ['A2', 'C4', 'D4', 'E4', 'G4', 'B4', 'C5', 'G5']
+  }
+}
+
+export const harmonizedScales: Record<string, MusicScale> = {
+  i: {
+    name: 'cmaj',
+    notes: ['C4', 'E4', 'G4', 'C5', 'D5', 'E5', 'G5', 'E6']
+  },
+  ii: {
+    name: 'dmin',
+    notes: ['C4', 'F4', 'A4', 'C5', 'D5', 'E4', 'A5', 'C6']
+  },
+  iii: {
+    name: 'emin',
+    notes: ['B3', 'E4', 'G4', 'A4', 'B4', 'D5', 'G5', 'B5']
+  },
+  iv: {
+    name: 'fmaj',
+    notes: ['C4', 'F4', 'A4', 'C5', 'E5', 'G5', 'A5', 'C6']
+  },
+  v: {
+    name: 'gmaj',
+    notes: ['B3', 'D4', 'G4', 'B4', 'D4', 'G5', 'A5', 'B5']
+  },
+  vi: {
+    name: 'amin',
+    notes: ['C4', 'E4', 'G4', 'A4', 'C5', 'E5', 'B5', 'C6']
+  }
 }
 
 // Collection of available harmony progressions
 export const harmonies: Record<string, Harmony> = {
   simple: {
     name: 'Simple',
-    description: 'Basic chord progression in C major',
     chords: [
-      { notes: ['C2', 'E3'] },
-      { notes: ['A1', 'C3'] },
-      { notes: ['E2', 'C3'] },
-      { notes: ['F2', 'A3'] } 
+      { notes: ['C2', 'E3'], scale: harmonizedScales.i.notes },
+      { notes: ['A1', 'C3'], scale: harmonizedScales.vi.notes },
+      { notes: ['E2', 'C3'], scale: harmonizedScales.i.notes },
+      { notes: ['F2', 'A3'], scale: harmonizedScales.iv.notes } 
     ]
   },
   jazz: {
     name: 'Jazz',
-    description: 'Jazz-inspired chord progression',
     chords: [
-      { notes: ['D2', 'C3', 'F3'] },  // Dm7
-      { notes: ['G2', 'F3', 'B3'] },  // G7
-      { notes: ['C3', 'E3', 'B3'] },  // Cmaj7
-      { notes: ['A2', 'G3', 'C4'] }   // Am7
+      { notes: ['D2', 'C3', 'F3'], scale: harmonizedScales.ii.notes },  // Dm7
+      { notes: ['G2', 'F3', 'B3'], scale: harmonizedScales.v.notes },  // G7
+      { notes: ['C3', 'E3', 'B3'], scale: harmonizedScales.i.notes },  // Cmaj7
+      { notes: ['A2', 'G3', 'C4'], scale: harmonizedScales.vi.notes }   // Am7
     ]
   },
   dreamy: {
     name: 'Dreamy',
-    description: 'Ethereal chord progression',
     chords: [
-      { notes: ['F2', 'A3'] },  // F major
-      { notes: ['C2', 'E3'] },  // Cmaj7
-      { notes: ['G2', 'B3'] },  // G major
-      { notes: ['A2', 'C3'] }   // A minor
+      { notes: ['F2', 'A3'], scale: harmonizedScales.iv.notes },  // F major
+      { notes: ['C2', 'E3'], scale: harmonizedScales.i.notes },  // Cmaj7
+      { notes: ['G2', 'B3'], scale: harmonizedScales.v.notes },  // G major
+      { notes: ['A2', 'C3'], scale: harmonizedScales.vi.notes }   // A minor
     ]
   },
   melancholy: {
     name: 'Melancholy',
-    description: 'Reflective minor chord progression',
     chords: [
-      { notes: ['A2', 'C4'] },  // A minor
-      { notes: ['E2', 'G3'] },  // E minor
-      { notes: ['F2', 'A3'] },  // F major
-      { notes: ['G2', 'B3'] }  // G7
+      { notes: ['A2', 'C4'], scale: harmonizedScales.vi.notes },  // A minor
+      { notes: ['E2', 'G3'], scale: harmonizedScales.iii.notes },  // E minor
+      { notes: ['F2', 'A3'], scale: harmonizedScales.iv.notes },  // F major
+      { notes: ['G2', 'B3'], scale: harmonizedScales.v.notes }  // G7
     ]
   }
 };
@@ -81,6 +116,14 @@ export function getHarmonyChord(harmony: Harmony, weekIndex: number, interval: n
  */
 export function getAvailableHarmonies(): Harmony[] {
   return Object.values(harmonies);
+}
+
+/**
+ * Get all available scales
+ * @returns Array of all scale objects
+ */
+export function getAvailableScales(): MusicScale[] {
+  return Object.values(simpleScales);
 }
 
 /**

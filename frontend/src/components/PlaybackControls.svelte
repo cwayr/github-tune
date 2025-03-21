@@ -24,16 +24,27 @@
     });
   }
   
-
-  
-  function selectScale(event: Event) {
+  function selectMoodOrHarmony(event: Event) {
     const target = event.target as HTMLSelectElement;
-    const selectedScale = availableScales.find((s: MusicScale) => s.name === target.value);
-    if (selectedScale) {
-      inflate('updateSettings', { 
-        ...settings, 
-        scale: selectedScale 
+    
+    if (settings.harmony.enabled) {
+      // When harmonized mode is active, update the harmony name
+      inflate('updateSettings', {
+        ...settings,
+        harmony: {
+          ...settings.harmony,
+          name: target.value
+        }
       });
+    } else {
+      // When simple mode is active, update the scale
+      const selectedScale = availableScales.find((s: MusicScale) => s.name === target.value);
+      if (selectedScale) {
+        inflate('updateSettings', { 
+          ...settings, 
+          scale: selectedScale 
+        });
+      }
     }
   }
   
@@ -43,17 +54,6 @@
       harmony: {
         ...settings.harmony,
         enabled: !settings.harmony.enabled
-      }
-    });
-  }
-  
-  function selectHarmony(event: Event) {
-    const target = event.target as HTMLSelectElement;
-    inflate('updateSettings', {
-      ...settings,
-      harmony: {
-        ...settings.harmony,
-        name: target.value
       }
     });
   }
@@ -103,55 +103,58 @@
         </div>
       </div>
 
-      <!-- Harmony controls -->
+      <!-- Mode controls -->
       <div class="control-section harmony-section">
         <div class="harmony-header">
-          <label for="harmony" class="control-label">Harmony</label>
-          <label class="toggle-switch">
-            <input 
-              type="checkbox" 
-              checked={settings.harmony.enabled}
-              onchange={toggleHarmony}
-            />
-            <span class="toggle-slider"></span>
-          </label>
+          <label for="harmony" class="control-label">Mode</label>
+          <div class="mode-toggle">
+            <span class="mode-label">Simple</span>
+            <label class="toggle-switch" style="display: flex; align-items: center;">
+              <input 
+                type="checkbox" 
+                checked={settings.harmony.enabled}
+                onchange={toggleHarmony}
+              />
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="mode-label">Harmonized</span>
+          </div>
         </div>
-        
-        <div class="harmony-controls" class:disabled={!settings.harmony.enabled}>
-          <div class="select-container">
-            <select 
-              id="harmony" 
-              onchange={selectHarmony} 
-              class="harmony-select"
-              disabled={!settings.harmony.enabled}
-            >
+          <div class="harmony-controls">
+            <div class="harmony-description">
+              <p class="mode-description">
+                {settings.harmony.enabled ? 
+                  'Uses harmonizing chords and changes scales as you play' : 
+                  'Only plays notes from days with contributions'}
+              </p>
+            </div>
+          </div>
+      </div>
+
+      <!-- Mood/Harmony in the second row -->
+      <div class="control-section scale-section">
+        <label for="mood-or-harmony" class="control-label">Mood</label>
+        <div class="select-container">
+          <select 
+            id="mood-or-harmony" 
+            onchange={selectMoodOrHarmony} 
+            class="scale-select"
+          >
+            {#if settings.harmony.enabled}
+              <!-- Show harmony options when in harmonized mode -->
               {#each availableHarmonies as harmony}
                 <option value={harmony.name.toLowerCase()} selected={settings.harmony.name === harmony.name.toLowerCase()}>
                   {harmony.name}
                 </option>
               {/each}
-            </select>
-            <span class="select-arrow">▼</span>
-          </div>
-          
-
-        </div>
-      </div>
-
-      <!-- Mood in the second row -->
-      <div class="control-section scale-section">
-        <label for="scale" class="control-label">Mood</label>
-        <div class="select-container">
-          <select 
-            id="scale" 
-            onchange={selectScale} 
-            class="scale-select"
-          >
-            {#each availableScales as scale}
-              <option value={scale.name} selected={settings.scale.name === scale.name}>
-                {scale.name}
-              </option>
-            {/each}
+            {:else}
+              <!-- Show mood options when in simple mode -->
+              {#each availableScales as scale}
+                <option value={scale.name} selected={settings.scale.name === scale.name}>
+                  {scale.name}
+                </option>
+              {/each}
+            {/if}
           </select>
           <span class="select-arrow">▼</span>
         </div>
@@ -169,6 +172,27 @@
     padding: 1rem 1.5rem;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   }
+  
+  .mode-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+  }
+  
+  .mode-label {
+    font-size: 0.85rem;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+  }
+  
+  .mode-description {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0.3rem 0 0.8rem;
+    line-height: 1.4;
+  }
+  
   
   .control-title {
     font-size: 1.25rem;
@@ -236,21 +260,35 @@
   
   .harmony-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .harmony-header .control-label {
+    margin-bottom: 0;
+    margin-right: 0.5rem;
+  }
+  
+  @media (max-width: 1100px) {
+    .harmony-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .mode-toggle {
+      width: 100%;
+      justify-content: space-between;
+    }
   }
   
   .harmony-controls {
     opacity: 1;
     transition: opacity 0.3s ease;
+    margin-top: 1rem;
   }
-  
-  .harmony-controls.disabled {
-    opacity: 0.5;
-    pointer-events: none;
-  }
-  
   
   /* Toggle switch styles */
   .toggle-switch {

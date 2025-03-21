@@ -1,5 +1,5 @@
 import type { ContributionYear, MusicScale, PlaybackSettings } from '../config/types';
-import { getHarmonyByName, getHarmonyChord } from './harmonies';
+import { getAvailableScales, getHarmonyByName, getHarmonyChord } from './harmonies';
 import * as Tone from 'tone';
 
 class AudioEngine {
@@ -10,31 +10,6 @@ class AudioEngine {
   private initPromise: Promise<void> | null = null;
   private startTime: number | null = null;
   private lastHarmonyIndex: number = -1; // Track the last harmony index played
-  private readonly FIXED_VOLUME = 0.7; // Fixed volume level (0.0 to 1.0)
-  
-  // Predefined musical scales with more expressive note ranges
-  private scales: Record<string, MusicScale> = {
-    joyful: {
-      name: 'Joyful',
-      notes: ['C4', 'E4', 'F4', 'G4', 'B4', 'C5', 'D5', 'E5']
-    },
-    melancholy: {
-      name: 'Melancholy',
-      notes: ['A2', 'C4', 'D4', 'E4', 'G4', 'B4', 'C5', 'G5']
-    },
-    // dreamy: {
-    //   name: 'Dreamy',
-    //   notes: ['C4', 'D4', 'E4', 'G4', 'A4', 'C5', 'D5', 'E5']
-    // },
-    // mysterious: {
-    //   name: 'Mysterious',
-    //   notes: ['D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'D5']
-    // },
-    // ethereal: {
-    //   name: 'Ethereal',
-    //   notes: ['F4', 'G4', 'A4', 'B4', 'C5', 'D5', 'E5', 'F5']
-    // }
-  };
   
   private async initAudio(): Promise<void> {
     // If already initialized or initialization is in progress, return the existing promise
@@ -72,7 +47,12 @@ class AudioEngine {
             B4: 'B4v3.ogg',
             C5: 'C5v3.ogg',
             D5: 'D5v3.ogg',
-            E5: 'E5v3.ogg'
+            E5: 'E5v3.ogg',
+            F5: 'F5v3.ogg',
+            G5: 'G5v3.ogg',
+            A5: 'A5v3.ogg',
+            C6: 'C6v3.ogg',
+            E6: 'E6v3.ogg'
           },
           baseUrl: '/piano_samples/',
           onload: () => {
@@ -80,7 +60,6 @@ class AudioEngine {
             this.samplesLoaded = true;
             resolve();
           },
-          volume: this.FIXED_VOLUME // Set fixed volume
         }).toDestination();
         
         this.isInitialized = true;
@@ -105,7 +84,7 @@ class AudioEngine {
   }
   
   public getAvailableScales(): MusicScale[] {
-    return Object.values(this.scales);
+    return getAvailableScales();
   }
   
   public async playContributionWeek(
@@ -149,37 +128,25 @@ class AudioEngine {
       }
       
       const weekData = contributionData.weeks[week];
-      const scale = settings.scale;
+      let activeScale = settings.scale; // Default scale from settings
       
       // Gather all notes to play simultaneously as a chord
       const notesToPlay: string[] = [];
       
-      // First, handle contributions (always play if they exist)
-      const hasContributions = weekData.days.some(day => day.count > 0);
-      if (hasContributions) {
-        // Map contribution days to notes
-        weekData.days.forEach((day, dayIndex) => {
-          if (day.count > 0) {
-            // Map day index to a note in the selected scale
-            const note = scale.notes[dayIndex % scale.notes.length];
-            notesToPlay.push(note);
-            this.activeNotes.push(note);
-          }
-        });
-      }
+      // Determine mode - simple or harmonized
+      const isHarmonizedMode = settings.harmony.enabled;
       
-      // Second, handle harmony (independently of contributions)
-      if (settings.harmony.enabled) {
+      // If in harmonized mode, we need to get the current harmony and its associated scale
+      if (isHarmonizedMode) {
         const harmony = getHarmonyByName(settings.harmony.name);
         const FIXED_INTERVAL = 8; // Fixed 8-week interval for harmony changes
         
         // Calculate which chord in the progression to use based on weekIndex and fixed interval
         const currentHarmonyIndex = Math.floor(week / FIXED_INTERVAL) % harmony.chords.length;
+        const chord = harmony.chords[currentHarmonyIndex];
         
         // Only play the chord if it has changed or it's the first one
         if (currentHarmonyIndex !== this.lastHarmonyIndex) {
-          const chord = harmony.chords[currentHarmonyIndex];
-          
           // Add all notes from the chord
           chord.notes.forEach(note => {
             notesToPlay.push(note);
@@ -192,6 +159,28 @@ class AudioEngine {
           // Log which chord is playing
           console.log(`Playing harmony chord for week ${week}: ${chord.notes.join(', ')} (chord ${currentHarmonyIndex + 1} of ${harmony.chords.length})`);
         }
+        
+        // Use the scale associated with this chord if available
+        if (chord.scale && chord.scale.length > 0) {
+          activeScale = {
+            name: settings.scale.name, // Keep the original scale name for UI consistency
+            notes: chord.scale // But use the notes from the chord's associated scale
+          };
+        }
+      }
+      
+      // Handle contributions (always play if they exist)
+      const hasContributions = weekData.days.some(day => day.count > 0);
+      if (hasContributions) {
+        // Map contribution days to notes
+        weekData.days.forEach((day, dayIndex) => {
+          if (day.count > 0) {
+            // Map day index to a note in the active scale
+            const note = activeScale.notes[dayIndex % activeScale.notes.length];
+            notesToPlay.push(note);
+            this.activeNotes.push(note);
+          }
+        });
       }
       
       // Play all notes simultaneously as a chord

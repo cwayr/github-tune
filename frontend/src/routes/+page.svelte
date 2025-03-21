@@ -571,12 +571,6 @@ onMount(() => {
     background-color: var(--surface);
   }
   
-  /* Dark mode share input styling */
-  .dark-mode .share-input {
-    background-color: var(--surface-dark);
-    color: var(--light);
-  }
-  
   .copy-button {
     display: flex;
     align-items: center;

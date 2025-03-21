@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { PlaybackSettings, MusicScale } from '../config/types';
-  import { getAvailableHarmonies, type Harmony } from '../lib/harmonies';
+  import { getAvailableHarmonies } from '../lib/harmonies';
   
   const { isPlaying = false, settings, availableScales = [], inflate } = $props<{
     isPlaying: boolean;
@@ -9,7 +9,6 @@
     inflate: (event: string, data?: any) => void;
   }>();
   
-  // Get all available harmonies
   const availableHarmonies = getAvailableHarmonies();
   
   function togglePlay() {
@@ -28,7 +27,6 @@
     const target = event.target as HTMLSelectElement;
     
     if (settings.harmony.enabled) {
-      // When harmonized mode is active, update the harmony name
       inflate('updateSettings', {
         ...settings,
         harmony: {
@@ -37,7 +35,6 @@
         }
       });
     } else {
-      // When simple mode is active, update the scale
       const selectedScale = availableScales.find((s: MusicScale) => s.name === target.value);
       if (selectedScale) {
         inflate('updateSettings', { 
@@ -79,7 +76,6 @@
     </div>
     
     <div class="controls-grid">
-      <!-- Speed and Harmony in the first row -->
       <div class="control-section">
         <label for="speed" class="control-label">
           <span class="label-text">Speed</span>
@@ -103,7 +99,6 @@
         </div>
       </div>
 
-      <!-- Mode controls -->
       <div class="control-section harmony-section">
         <div class="harmony-header">
           <label for="harmony" class="control-label">Mode</label>
@@ -131,7 +126,6 @@
           </div>
       </div>
 
-      <!-- Mood/Harmony in the second row -->
       <div class="control-section scale-section">
         <label for="mood-or-harmony" class="control-label">Mood</label>
         <div class="select-container">
@@ -141,14 +135,12 @@
             class="scale-select"
           >
             {#if settings.harmony.enabled}
-              <!-- Show harmony options when in harmonized mode -->
               {#each availableHarmonies as harmony}
                 <option value={harmony.name.toLowerCase()} selected={settings.harmony.name === harmony.name.toLowerCase()}>
                   {harmony.name}
                 </option>
               {/each}
             {:else}
-              <!-- Show mood options when in simple mode -->
               {#each availableScales as scale}
                 <option value={scale.name} selected={settings.scale.name === scale.name}>
                   {scale.name}

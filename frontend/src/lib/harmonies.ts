@@ -66,28 +66,28 @@ export const harmonies: Record<string, Harmony> = {
   jazz: {
     name: 'Jazz',
     chords: [
-      { notes: ['D2', 'C3', 'F3'], scale: harmonizedScales.ii.notes },  // Dm7
-      { notes: ['G2', 'F3', 'B3'], scale: harmonizedScales.v.notes },  // G7
-      { notes: ['C3', 'E3', 'B3'], scale: harmonizedScales.i.notes },  // Cmaj7
-      { notes: ['A2', 'G3', 'C4'], scale: harmonizedScales.vi.notes }   // Am7
+      { notes: ['D2', 'C3', 'F3'], scale: harmonizedScales.ii.notes },
+      { notes: ['G2', 'F3', 'B3'], scale: harmonizedScales.v.notes },
+      { notes: ['C3', 'E3', 'B3'], scale: harmonizedScales.i.notes },
+      { notes: ['A2', 'G3', 'C4'], scale: harmonizedScales.vi.notes }
     ]
   },
   dreamy: {
     name: 'Dreamy',
     chords: [
-      { notes: ['F2', 'A3'], scale: harmonizedScales.iv.notes },  // F major
-      { notes: ['C2', 'E3'], scale: harmonizedScales.i.notes },  // Cmaj7
-      { notes: ['G2', 'B3'], scale: harmonizedScales.v.notes },  // G major
-      { notes: ['A2', 'C3'], scale: harmonizedScales.vi.notes }   // A minor
+      { notes: ['F2', 'A3'], scale: harmonizedScales.iv.notes },
+      { notes: ['C2', 'E3'], scale: harmonizedScales.i.notes },
+      { notes: ['G2', 'B3'], scale: harmonizedScales.v.notes },
+      { notes: ['A2', 'C4'], scale: harmonizedScales.vi.notes }
     ]
   },
   melancholy: {
     name: 'Melancholy',
     chords: [
-      { notes: ['A2', 'C4'], scale: harmonizedScales.vi.notes },  // A minor
-      { notes: ['E2', 'G3'], scale: harmonizedScales.iii.notes },  // E minor
-      { notes: ['F2', 'A3'], scale: harmonizedScales.iv.notes },  // F major
-      { notes: ['G2', 'B3'], scale: harmonizedScales.v.notes }  // G7
+      { notes: ['A2', 'C4'], scale: harmonizedScales.vi.notes },
+      { notes: ['E2', 'G3'], scale: harmonizedScales.iii.notes },
+      { notes: ['F2', 'A3'], scale: harmonizedScales.iv.notes },
+      { notes: ['G2', 'B3'], scale: harmonizedScales.v.notes }
     ]
   }
 };

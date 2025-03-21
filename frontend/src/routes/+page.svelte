@@ -5,7 +5,6 @@ import PlaybackControls from '../components/PlaybackControls.svelte';
 import { audioEngine } from '../lib/audio-engine';
 import type { ContributionYear, PlaybackSettings } from '../config/types';
 
-// State variables
 let username = '';
 let contributionData: ContributionYear | null = null;
 let isPlaying = false;
@@ -24,11 +23,9 @@ let errorMessage = '';
 let showIntro = true;
 let visualizerMode = false;
 
-// API URL
 const fnUrl = import.meta.env.VITE_FN_URL || 'https://mbmavarqr6s4kqsvpv7g57zqca0gzhtp.lambda-url.us-east-1.on.aws/';
 console.log('Frontend FN URL:', fnUrl);
 
-// Handle form submission
 function handleSubmit() {
   if (username) {
     fetchContributions();
@@ -36,7 +33,6 @@ function handleSubmit() {
   }
 }
 
-// Fetch user's GitHub contributions
 async function fetchContributions() {
   try {
     loading = true;
@@ -51,10 +47,8 @@ async function fetchContributions() {
     const jsonText = await response.text();
     
     try {
-      // Parse the JSON response and assign it to the contributionData variable
       contributionData = JSON.parse(jsonText);
       
-      // Reset the playback position
       currentPosition = null;
       stopPlayback();
     } catch (parseError) {
@@ -70,7 +64,6 @@ async function fetchContributions() {
   }
 }
 
-// Toggle playback state
 async function togglePlay() {
   if (isPlaying) {
     stopPlayback();
@@ -89,7 +82,6 @@ async function togglePlay() {
   }
 }
 
-// Start the playback
 function startPlayback() {
   if (!contributionData) return;
   isPlaying = true;
@@ -98,29 +90,23 @@ function startPlayback() {
   playWeek(0);
 }
 
-// Stop the playback
 function stopPlayback() {
   isPlaying = false;
   visualizerMode = false;
   audioEngine.stopSound();
-  // Clear the current position to remove highlighting
   currentPosition = null;
 }
 
-// Play a specific week
 function playWeek(week: number) {
   if (!isPlaying || !contributionData) return;
 
-  // Update current position to highlight the entire week
   currentPosition = { week, day: 0 };
   
-  // Play the sound for this week
   audioEngine.playContributionWeek(
     week,
     contributionData,
     playbackSettings,
     () => {
-      // Move to the next week if we're still playing and there are more weeks
       if (isPlaying && contributionData && week < contributionData.weeks.length - 1) {
         playWeek(week + 1);
       } else {
@@ -130,28 +116,23 @@ function playWeek(week: number) {
   );
 }
 
-// Update playback settings
 function updateSettings(event: CustomEvent | { detail: any }) {
   playbackSettings = event.detail;
 }
 
-// Toggle between light and dark theme
 function toggleTheme() {
   theme = theme === 'light' ? 'dark' : 'light';
   document.body.classList.toggle('dark-mode');
 }
 
-// Generate a shareable link
 function generateShareLink(): string {
   const baseUrl = window.location.origin;
   return `${baseUrl}?user=${encodeURIComponent(username)}`;
 }
 
-// Copy the share link to clipboard
 async function copyShareLink() {
   try {
     await navigator.clipboard.writeText(generateShareLink());
-    // You could add a toast notification here
   } catch (err) {
     console.error('Failed to copy: ', err);
   }
@@ -240,9 +221,9 @@ onMount(() => {
               {contributionData}
               {currentPosition}
               {theme}
+              {isPlaying}
               on:cellClick={(e) => {
                 currentPosition = e.detail;
-                // Play specific cell if needed
               }}
             />
           </div>

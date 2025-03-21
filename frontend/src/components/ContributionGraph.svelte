@@ -4,11 +4,17 @@ import type { ContributionYear } from '../config/types';
 export let contributionData: ContributionYear | null = null;
 export let currentPosition: { week: number; day: number } | null = null;
 export let theme: 'light' | 'dark' | 'custom' = 'light';
+export let isPlaying: boolean = false;
 
 let weeksContainer: HTMLDivElement;
+let currentMonth: string = '';
+
+$: if (!isPlaying) {
+  currentMonth = '';
+}
 
 // Track when currentPosition changes
-$: if (currentPosition && weeksContainer) {
+$: if (currentPosition && weeksContainer && contributionData) {
   // Get all week elements
   const weekElements = weeksContainer.querySelectorAll('.week');
   if (weekElements.length > 0 && currentPosition.week < weekElements.length) {
@@ -18,12 +24,17 @@ $: if (currentPosition && weeksContainer) {
       // Calculate position to center the active week
       const weekLeft = (activeWeekElement as HTMLElement).offsetLeft;
       const scrollPosition = weekLeft - (weeksContainer.clientWidth / 2) + ((activeWeekElement as HTMLElement).offsetWidth / 2);
-      
-      // Scroll to position
       weeksContainer.scrollTo({
         left: Math.max(0, scrollPosition),
         behavior: 'smooth'
       });
+      
+      // Update current month based on first day of current week
+      if (contributionData.weeks[currentPosition.week]?.days[0]) {
+        const firstDayDate = new Date(contributionData.weeks[currentPosition.week].days[0].date);
+        const monthName = firstDayDate.toLocaleString('en-US', { month: 'long' });
+        currentMonth = monthName;
+      }
     }
   }
 }
@@ -57,7 +68,9 @@ function isActiveWeek(week: number): boolean {
     </div>
   {:else}
     <div class="graph-header">
-      <h3 class="graph-title">Contribution Activity</h3>
+      <div class="title-section">
+        <h3 class="graph-title">Contribution Activity</h3>
+      </div>
       <div class="legend">
         <span class="legend-label">Less</span>
         <div class="legend-colors">
@@ -70,7 +83,15 @@ function isActiveWeek(week: number): boolean {
         <span class="legend-label">More</span>
       </div>
     </div>
-    
+
+    <div class="month-container">
+      {#if currentMonth}
+        <div class="current-month">{currentMonth}</div>
+      {:else}
+        <div class="current-month-placeholder"></div>
+      {/if}
+    </div>
+
     <div class="graph-container">
       <div class="weekday-labels">
         <div>Mon</div>
@@ -84,7 +105,7 @@ function isActiveWeek(week: number): boolean {
           <div class="week {isActiveWeek(weekIndex) ? 'active-week-container' : ''}">
             {#each week.days as day, dayIndex}
               <div
-                class="day-cell {isActiveWeek(weekIndex) ? 'active-week' : ''}"
+                class="day-cell {isActiveWeek(weekIndex) ? 'active-week' : ''} {isActiveWeek(weekIndex) && day.count > 0 ? 'contribution-flash' : ''}"
                 style="background-color: {getContributionColor(day.count)};"
                 data-count={day.count}
                 data-date={day.date}
@@ -118,11 +139,38 @@ function isActiveWeek(week: number): boolean {
     padding: 1rem 1.5rem;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   }
+  
+  .title-section {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+  }
 
   .graph-title {
     font-size: 1.25rem;
     font-weight: 600;
     margin: 0;
+  }
+  
+  .month-container {
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0.5rem 0;
+    padding: 0 1.5rem;
+  }
+
+  .current-month {
+    font-size: 1rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    transition: all 0.3s ease;
+    animation: fade-in 0.5s ease-in-out;
+  }
+  
+  .current-month-placeholder {
+    height: 1rem;
   }
 
   .legend {
@@ -170,8 +218,8 @@ function isActiveWeek(week: number): boolean {
     display: flex;
     align-items: stretch;
     padding: 1.5rem;
+    padding-top: 0;
     background-color: var(--surface);
-    margin: 10px 0;
     min-height: 180px;
   }
 
@@ -222,12 +270,6 @@ function isActiveWeek(week: number): boolean {
     z-index: 20;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
   }
-  
-  .active-week {
-    outline: 2px solid #4e89e8;
-    z-index: 10;
-  }
-
   .day-cell .tooltip {
     position: absolute;
     bottom: 100%;
@@ -256,6 +298,11 @@ function isActiveWeek(week: number): boolean {
     box-shadow: 0 0 8px 2px var(--primary-light);
     z-index: 15;
     transform: scale(1.2);
+  }
+
+  /* Flash effect for days with contributions in active week */
+  .contribution-flash {
+    animation: contribution-flash-animation 1.5s infinite;
   }
 
   /* Active week container styles */
@@ -295,6 +342,17 @@ function isActiveWeek(week: number): boolean {
     }
   }
 
+  @keyframes contribution-flash-animation {
+    0% {
+      filter: brightness(1);
+      box-shadow: 0 0 8px 2px var(--primary-light);
+    }
+    100% {
+      filter: brightness(1.5);
+      box-shadow: 0 0 12px 4px var(--primary-light);
+    }
+  }
+
   /* Dark mode adjustments */
   :global(body.dark-mode) .empty-graph {
     background-color: var(--surface-dark);
@@ -306,6 +364,27 @@ function isActiveWeek(week: number): boolean {
 
   :global(body.dark-mode) .graph-header {
     border-bottom-color: rgba(255, 255, 255, 0.05);
+  }
+  
+  /* Dark mode flash effect adjustments */
+  :global(body.dark-mode) .contribution-flash {
+    animation: contribution-flash-animation-dark 1.5s infinite;
+  }
+  
+  @keyframes contribution-flash-animation-dark {
+    0% {
+      filter: brightness(1);
+      box-shadow: 0 0 8px 2px rgba(76, 175, 80, 0.5);
+    }
+    100% {
+      filter: brightness(1.8);
+      box-shadow: 0 0 12px 4px rgba(76, 175, 80, 0.8);
+    }
+  }
+  
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
 </style>

@@ -1,5 +1,5 @@
+import { getAvailableScales, getHarmonyByName } from './harmonies';
 import type { ContributionYear, MusicScale, PlaybackSettings } from '../config/types';
-import { getAvailableScales, getHarmonyByName, getHarmonyChord } from './harmonies';
 import * as Tone from 'tone';
 
 class AudioEngine {
@@ -9,15 +9,13 @@ class AudioEngine {
   private sampler: Tone.Sampler | null = null;
   private initPromise: Promise<void> | null = null;
   private startTime: number | null = null;
-  private lastHarmonyIndex: number = -1; // Track the last harmony index played
+  private lastHarmonyIndex: number = -1;
   
   private async initAudio(): Promise<void> {
-    // If already initialized or initialization is in progress, return the existing promise
     if (this.initPromise) {
       return this.initPromise;
     }
     
-    // Create a new initialization promise
     this.initPromise = new Promise<void>(async (resolve, reject) => {
       if (typeof window === 'undefined' || this.isInitialized) {
         resolve();
@@ -26,14 +24,11 @@ class AudioEngine {
       
       try {
         console.log('Initializing Tone.js audio engine');
-        
-        // Ensure Tone.js context is started
         if (Tone.getContext().state !== 'running') {
           await Tone.start();
           console.log('Tone.js context started');
         }
         
-        // Create sampler using static samples
         this.sampler = new Tone.Sampler({
           urls: {
             C2: 'C2v3.ogg',
@@ -65,7 +60,7 @@ class AudioEngine {
         this.isInitialized = true;
         console.log('Tone.js audio engine initialized');
         
-        // If onload wasn't called after 5 seconds, resolve anyway to prevent hanging
+        // If onload isn't called after 5 seconds, resolve anyway to prevent hanging
         setTimeout(() => {
           if (!this.samplesLoaded) {
             console.warn('Sample loading timed out, continuing anyway');
@@ -75,7 +70,7 @@ class AudioEngine {
         }, 5000);
       } catch (error) {
         console.error('Failed to initialize Tone.js:', error);
-        this.initPromise = null; // Reset promise so initialization can be attempted again
+        this.initPromise = null;
         reject(new Error(`Audio initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`));
       }
     });
@@ -99,10 +94,7 @@ class AudioEngine {
         this.lastHarmonyIndex = -1;
       }
       
-      // Initialize audio and ensure samples are loaded
       await this.initAudio();
-      
-      // Stop any playing sound
       this.stopSound();
       
       if (week >= contributionData.weeks.length) {
@@ -122,18 +114,13 @@ class AudioEngine {
         }
       }
       
-      // Check if sampler is ready
       if (!this.sampler || !this.samplesLoaded) {
         throw new Error('Audio samples not loaded yet');
       }
       
       const weekData = contributionData.weeks[week];
-      let activeScale = settings.scale; // Default scale from settings
-      
-      // Gather all notes to play simultaneously as a chord
+      let activeScale = settings.scale;
       const notesToPlay: string[] = [];
-      
-      // Determine mode - simple or harmonized
       const isHarmonizedMode = settings.harmony.enabled;
       
       // If in harmonized mode, we need to get the current harmony and its associated scale
@@ -147,24 +134,20 @@ class AudioEngine {
         
         // Only play the chord if it has changed or it's the first one
         if (currentHarmonyIndex !== this.lastHarmonyIndex) {
-          // Add all notes from the chord
           chord.notes.forEach(note => {
             notesToPlay.push(note);
             this.activeNotes.push(note);
           });
           
-          // Update the last harmony index
           this.lastHarmonyIndex = currentHarmonyIndex;
-          
-          // Log which chord is playing
           console.log(`Playing harmony chord for week ${week}: ${chord.notes.join(', ')} (chord ${currentHarmonyIndex + 1} of ${harmony.chords.length})`);
         }
         
         // Use the scale associated with this chord if available
         if (chord.scale && chord.scale.length > 0) {
           activeScale = {
-            name: settings.scale.name, // Keep the original scale name for UI consistency
-            notes: chord.scale // But use the notes from the chord's associated scale
+            name: settings.scale.name,
+            notes: chord.scale
           };
         }
       }
@@ -183,7 +166,6 @@ class AudioEngine {
         });
       }
       
-      // Play all notes simultaneously as a chord
       if (notesToPlay.length > 0) {
         this.startTime = Tone.now();
         notesToPlay.forEach(note => {
@@ -191,21 +173,18 @@ class AudioEngine {
         });
       }
       
-      // Calculate playback duration based on speed setting
       const duration = (240 / settings.speed) + 100;
       
-      // Schedule completion callback
       setTimeout(() => {
         this.stopSound();
         onComplete();
       }, duration);
-      
-      // Update playback progress
+
       this.updatePlaybackProgress(duration);
     } catch (error) {
       console.error('Error in playContributionWeek:', error);
       this.stopSound();
-      onComplete(); // Ensure callback is called even on error
+      onComplete();
     }
   }
   
@@ -241,5 +220,4 @@ class AudioEngine {
   }
 }
 
-// Export a singleton instance
 export const audioEngine = new AudioEngine();

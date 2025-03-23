@@ -245,7 +245,8 @@
   .controls-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    column-gap: 1.5rem;
+    row-gap: 0.5rem;
   }
   
   /* Harmony section styles are now handled in media queries */

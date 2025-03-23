@@ -89,6 +89,27 @@ export const harmonies: Record<string, Harmony> = {
       { notes: ['F2', 'A3'], scale: harmonizedScales.iv.notes },
       { notes: ['G2', 'B3'], scale: harmonizedScales.v.notes }
     ]
+  },
+  interstellar: {
+    name: 'Interstellar',
+    chords: [
+      { notes: ['F2', 'E4'], scale: harmonizedScales.iv.notes },
+      { notes: ['G2', 'E4'], scale: harmonizedScales.iii.notes },
+      { notes: ['A2', 'E4'], scale: harmonizedScales.vi.notes },
+      { notes: ['G2', 'E4'], scale: harmonizedScales.iii.notes }
+    ]
+  },
+  inception: {
+    name: 'Inception',
+    chords: [
+      { notes: ['D3', 'F3'], scale: harmonizedScales.ii.notes },
+      { notes: ['A2', 'C4'], scale: harmonizedScales.vi.notes },
+      { notes: ['C3', 'E3'], scale: harmonizedScales.i.notes },
+      { notes: ['G2', 'B3'], scale: harmonizedScales.v.notes },
+      { notes: ['D3', 'F3'], scale: harmonizedScales.ii.notes },
+      { notes: ['F2', 'E4'], scale: harmonizedScales.iv.notes },
+      { notes: ['C3', 'E3'], scale: harmonizedScales.i.notes }
+    ]
   }
 };
 

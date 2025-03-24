@@ -1,5 +1,11 @@
 <script lang="ts">
 import { onMount } from 'svelte';
+import Music from '@lucide/svelte/icons/music';
+import Play from '@lucide/svelte/icons/play';
+import Square from '@lucide/svelte/icons/square';
+import Moon from '@lucide/svelte/icons/moon';
+import Sun from '@lucide/svelte/icons/sun';
+import Share from '@lucide/svelte/icons/share';
 import ContributionGraph from '../components/ContributionGraph.svelte';
 import PlaybackControls from '../components/PlaybackControls.svelte';
 import { audioEngine } from '../lib/audio-engine';
@@ -165,7 +171,7 @@ onMount(() => {
         
         {#if showIntro && !contributionData}
           <p class="intro-text animate-slideInUp delay-100">
-            Transform your GitHub contributions into music. Enter your username to hear your personalized melody.
+            Transform your GitHub contributions into music.
           </p>
         {/if}
         
@@ -184,8 +190,7 @@ onMount(() => {
                 {#if loading}
                   <span class="loading-spinner"></span>
                 {:else}
-                  <span class="search-icon">🎵</span>
-                  <span class="search-text">Generate</span>
+                  <Music size={16}/> Generate
                 {/if}
               </button>
             </div>
@@ -207,23 +212,23 @@ onMount(() => {
       <div class="controls">
         <button class="btn play-button" on:click={togglePlay} aria-label="Play or pause">
           {#if isPlaying}
-            <span class="icon">⏸️</span> Pause
+            <Square size={16}/> Stop
           {:else}
-            <span class="icon">▶️</span> Play
+            <Play size={16}/> Play tune
           {/if}
         </button>
         
         <button class="btn theme-toggle" on:click={toggleTheme} aria-label="Toggle theme">
           {#if theme === 'light'}
-            <span class="icon">🌙</span>
+            <Moon size={24}/>
           {:else}
-            <span class="icon">☀️</span>
+            <Sun size={24}/>
           {/if}
         </button>
         
         <div class="share-button">
-          <button class="btn" on:click={copyShareLink} aria-label="Copy share link">
-            <span class="icon">🔗</span> Share
+          <button class="btn share-btn" on:click={copyShareLink} aria-label="Copy share link">
+            <Share size={16}/> <span>Share</span>
           </button>
         </div>
       </div>
@@ -340,6 +345,7 @@ onMount(() => {
     border-radius: 0;
     padding-left: 1.25rem;
     padding-right: 1.25rem;
+    gap: 0.5rem;
   }
   
   .search-icon {
@@ -408,6 +414,12 @@ onMount(() => {
     align-items: center;
     overflow: hidden;
     transition: box-shadow 0.2s ease;
+  }
+  
+  .share-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
   
   .content-grid {

@@ -224,6 +224,7 @@ function isActiveWeek(week: number): boolean {
     padding-right: 8px;
     font-size: 0.75rem;
     color: var(--text-secondary);
+    margin-bottom: 40px;
   }
 
   .weeks-container {

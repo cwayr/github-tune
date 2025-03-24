@@ -71,3 +71,12 @@ Root directories:
 - **Self-Review Generated Code:** After generating code, perform a self-audit to ensure it adheres to these rules before presenting it. Suggest improvements if needed.
 - **Ask for Feedback:** If unsure about a design decision or implementation, ask the user for clarification or preferences (e.g., "Would you prefer a different approach for handling this API call?").
 - **Track Rule Violations:** If a rule is violated due to constraints or requirements, document the reason and suggest how to address it in the future.
+
+# UI/UX Rules
+
+All UI decisions should be guided by the following rules:
+
+- Be *sleek*, *modern*, and *minimal*, both in style and color.
+- Keep a consistent UI throughout the project (components should be shared).
+- Design responsive-first. Remember that over 50% of human web traffic is mobile.
+

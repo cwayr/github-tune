@@ -136,8 +136,8 @@ function isActiveWeek(week: number): boolean {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.03);
   }
   
   .title-section {
@@ -147,22 +147,22 @@ function isActiveWeek(week: number): boolean {
   }
 
   .graph-title {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
     font-weight: 600;
     margin: 0;
   }
   
   .month-container {
-    height: 30px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0.5rem 0;
-    padding: 0 1.5rem;
+    margin: 0.25rem 0;
+    padding: 0 1.25rem;
   }
 
   .current-month {
-    font-size: 1rem;
+    font-size: 0.95rem;
     color: var(--text-muted);
     font-weight: 500;
     transition: all 0.3s ease;
@@ -186,8 +186,8 @@ function isActiveWeek(week: number): boolean {
   }
 
   .legend-color {
-    width: 15px;
-    height: 15px;
+    width: 18px;
+    height: 18px;
     border-radius: 3px;
   }
 
@@ -200,11 +200,8 @@ function isActiveWeek(week: number): boolean {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 15rem;
-    background-color: var(--surface);
-    border-radius: 0;
+    padding: 3rem 1rem;
     color: var(--text-secondary);
-    padding: 2rem;
     text-align: center;
   }
 
@@ -216,175 +213,149 @@ function isActiveWeek(week: number): boolean {
 
   .graph-container {
     display: flex;
-    align-items: stretch;
-    padding: 1.5rem;
-    padding-top: 0;
-    background-color: var(--surface);
-    min-height: 180px;
+    padding: 0 1.25rem 1.25rem;
   }
 
   .weekday-labels {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 20px 0.75rem 20px 0;
-    font-size: 0.8rem;
+    padding-top: 25px;
+    padding-right: 8px;
+    font-size: 0.75rem;
     color: var(--text-secondary);
-    font-weight: 500;
   }
 
   .weeks-container {
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-behavior: smooth;
-    padding: 20px 0 20px 0;
     display: flex;
-    gap: 4px;
-    margin-top: 2px;
-    max-height: fit-content;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
+    overflow-x: auto;
+    padding: 25px 0;
+    scrollbar-width: thin;
+    gap: 5px;
+    min-height: 220px;
+    position: relative;
   }
-  
-  /* Hide scrollbar for Chrome, Safari and Opera */
+
+  /* For webkit browsers like Chrome/Safari/Edge */
   .weeks-container::-webkit-scrollbar {
-    display: none;
+    height: 6px;
+  }
+
+  .weeks-container::-webkit-scrollbar-track {
+    background: var(--gray-light);
+    border-radius: 3px;
+  }
+
+  .weeks-container::-webkit-scrollbar-thumb {
+    background-color: var(--text-muted);
+    border-radius: 3px;
+  }
+
+  :global(body.dark-mode) .weeks-container::-webkit-scrollbar-track {
+    background: var(--surface-dark);
   }
 
   .week {
-    display: inline-flex;
+    display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 5px;
   }
 
   .day-cell {
-    width: 15px;
-    height: 15px;
+    width: 18px;
+    height: 18px;
     border-radius: 3px;
     position: relative;
-    transition: all 0.2s ease;
+    cursor: pointer;
+    transition: transform 0.1s ease;
   }
 
   .day-cell:hover {
-    transform: scale(1.3);
-    z-index: 20;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    transform: scale(1.15);
   }
+  
+  .active-week-container {
+    z-index: 5;
+  }
+
+  .active-week {
+    z-index: 10;
+  }
+
   .day-cell .tooltip {
     position: absolute;
     bottom: 100%;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.8);
+    margin-bottom: 8px;
+    background-color: var(--surface-dark);
     color: white;
     padding: 0.5rem;
-    border-radius: 0.25rem;
+    border-radius: var(--radius-sm);
     font-size: 0.75rem;
     white-space: nowrap;
-    pointer-events: none;
+    box-shadow: var(--shadow-md);
     opacity: 0;
-    transition: opacity 0.2s;
-    z-index: 30;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    pointer-events: none;
+    z-index: 100;
     display: flex;
     flex-direction: column;
   }
 
-  .day-cell:hover .tooltip {
-    opacity: 1;
-  }
-
-  .active-week {
-    opacity: 1;
-    box-shadow: 0 0 8px 2px var(--primary-light);
-    z-index: 15;
-    transform: scale(1.2);
-  }
-
-  /* Flash effect for days with contributions in active week */
-  .contribution-flash {
-    animation: contribution-flash-animation 1.5s infinite;
-  }
-
-  /* Active week container styles */
-  .active-week-container {
-    position: relative;
-    z-index: 10;
-    padding: 8px 0;
-    margin: -8px 0;
-  }
-
-  .active-week-container::before {
+  .day-cell .tooltip::after {
     content: '';
     position: absolute;
-    left: -4px;
-    right: -4px;
-    top: -10px;
-    bottom: -10px;
-    background: transparent;
-    border-radius: 8px;
-    pointer-events: none;
-    z-index: 1;
-    animation: pulse 2s infinite;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: var(--surface-dark) transparent transparent transparent;
   }
 
-  @keyframes pulse {
-    0% {
-      opacity: 0.3;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.6;
-      transform: scale(1.05);
-    }
-    100% {
-      opacity: 0.3;
-      transform: scale(1);
-    }
+  .day-cell:hover .tooltip {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  :global(body.dark-mode) .graph-header {
+    border-color: rgba(255, 255, 255, 0.03);
+  }
+
+  .contribution-flash {
+    animation: contribution-flash-animation 1s ease-in-out;
+  }
+
+  :global(body.dark-mode) .contribution-flash {
+    animation: contribution-flash-animation-dark 1s ease-in-out;
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   @keyframes contribution-flash-animation {
     0% {
-      filter: brightness(1);
-      box-shadow: 0 0 8px 2px var(--primary-light);
+      filter: brightness(1.5);
+      box-shadow: 0 0 8px 2px rgba(16, 185, 129, 0.5);
     }
     100% {
-      filter: brightness(1.5);
-      box-shadow: 0 0 12px 4px var(--primary-light);
+      filter: brightness(1);
+      box-shadow: none;
     }
   }
 
-  /* Dark mode adjustments */
-  :global(body.dark-mode) .empty-graph {
-    background-color: var(--surface-dark);
-  }
-
-  :global(body.dark-mode) .graph-container {
-    background-color: var(--surface-dark);
-  }
-
-  :global(body.dark-mode) .graph-header {
-    border-bottom-color: rgba(255, 255, 255, 0.05);
-  }
-  
-  /* Dark mode flash effect adjustments */
-  :global(body.dark-mode) .contribution-flash {
-    animation: contribution-flash-animation-dark 1.5s infinite;
-  }
-  
   @keyframes contribution-flash-animation-dark {
     0% {
       filter: brightness(1);
       box-shadow: 0 0 8px 2px rgba(76, 175, 80, 0.5);
     }
     100% {
-      filter: brightness(1.8);
-      box-shadow: 0 0 12px 4px rgba(76, 175, 80, 0.8);
+      filter: brightness(1);
+      box-shadow: none;
     }
   }
-  
-  @keyframes fade-in {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
 </style>

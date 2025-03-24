@@ -13,8 +13,8 @@ let playbackSettings: PlaybackSettings = {
   speed: 1.0,
   scale: audioEngine.getAvailableScales()[0],
   harmony: {
-    enabled: true,
-    name: 'simple'
+    enabled: false,
+    name: 'joyful'
   }
 };
 let theme: 'light' | 'dark' = 'light';
@@ -160,7 +160,7 @@ onMount(() => {
     <div class="container">
       <div class="hero-content animate-fadeIn">
         <h1 class="site-title">
-          <span class="gradient-text" data-text="GitHub">GitHub</span> Tune
+          <span class="gradient-text">GitHub</span> Tune
         </h1>
         
         {#if showIntro && !contributionData}
@@ -185,7 +185,7 @@ onMount(() => {
                   <span class="loading-spinner"></span>
                 {:else}
                   <span class="search-icon">🎵</span>
-                  <span class="search-text">Generate Music</span>
+                  <span class="search-text">Generate</span>
                 {/if}
               </button>
             </div>
@@ -203,99 +203,59 @@ onMount(() => {
   </div>
 
   {#if contributionData}
-    <div class="content-section">
-      <div class="container">
-        <div class="header-row animate-fadeIn">
-          <h2 class="section-title">
-            <span class="username">@{username}'s</span> 
-            <span class="text-gradient">GitHub Tune</span>
-          </h2>
-          <button on:click={toggleTheme} class="theme-toggle" aria-label="Toggle dark mode">
-            <span class="toggle-icon">{theme === 'light' ? '🌙' : '☀️'}</span>
+    <div class="dashboard-container container">
+      <div class="controls">
+        <button class="btn play-button" on:click={togglePlay} aria-label="Play or pause">
+          {#if isPlaying}
+            <span class="icon">⏸️</span> Pause
+          {:else}
+            <span class="icon">▶️</span> Play
+          {/if}
+        </button>
+        
+        <button class="btn theme-toggle" on:click={toggleTheme} aria-label="Toggle theme">
+          {#if theme === 'light'}
+            <span class="icon">🌙</span>
+          {:else}
+            <span class="icon">☀️</span>
+          {/if}
+        </button>
+        
+        <div class="share-button">
+          <button class="btn" on:click={copyShareLink} aria-label="Copy share link">
+            <span class="icon">🔗</span> Share
           </button>
         </div>
-        
-        <div class="grid-layout">
-          <div class="graph-container card animate-fadeIn">
-            <ContributionGraph
-              {contributionData}
-              {currentPosition}
-              {theme}
-              {isPlaying}
-              on:cellClick={(e) => {
-                currentPosition = e.detail;
-              }}
-            />
-          </div>
-          
-          <div class="controls-container card animate-fadeIn delay-100">
-            <PlaybackControls
-              {isPlaying}
-              settings={playbackSettings}
-              availableScales={audioEngine.getAvailableScales()}
-              inflate={(event, data) => {
-                if (event === 'togglePlay') {
-                  togglePlay();
-                } else if (event === 'updateSettings' && data) {
-                  updateSettings({ detail: data });
-                }
-              }}
-            />
-          </div>
+      </div>
+      
+      <div class="content-grid">
+        <div class="graph-panel card">
+          <ContributionGraph 
+            {contributionData} 
+            {currentPosition} 
+            {theme} 
+            {isPlaying} 
+          />
         </div>
         
-        <div class="share-container card animate-fadeIn delay-200">
-          <div class="card-header">
-            <h3 class="share-title">Share Your Musical Creation</h3>
-          </div>
-          
-          <div class="card-body">
-
-            <div class="social-share-container">
-              <button
-                on:click={copyShareLink}
-                class="btn btn-secondary copy-button shadow-hover"
-                aria-label="Copy link to clipboard"
-              >
-                <span class="copy-icon">📋</span>
-                <span>Copy link</span>
-              </button>
-
-              <a
-                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Listen to the melody of my GitHub contributions! ${generateShareLink()}`)}`}
-                class="btn-social twitter shadow-hover"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Share on Twitter"
-              >
-                <span class="icon">𝕏</span>
-                <span>Share on X</span>
-              </a>
-              
-              <a
-                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(generateShareLink())}`}
-                class="btn-social facebook shadow-hover"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Share on Facebook"
-              >
-                <span class="icon">f</span>
-                <span>Share on Facebook</span>
-              </a>
-            </div>
-          </div>
+        <div class="playback-panel card">
+          <PlaybackControls 
+            on:settingsUpdate={updateSettings} 
+            settings={playbackSettings} 
+            availableScales={audioEngine.getAvailableScales()}
+          />
         </div>
       </div>
     </div>
   {/if}
-</main>
 
-<footer class="app-footer">
-  <div class="container">
-    <p>Created with Tone.js and Svelte.</p>
-    <p class="footer-note">Piano samples from Alexander Holm's <b><a href="https://archive.org/details/SalamanderGrandPianoV3" target="_blank" rel="noopener noreferrer">Salamander Grand Piano</a></b>.</p>
-  </div>
-</footer>
+  <footer class="app-footer">
+    <div class="container">
+      <p>Created with Tone.js and Svelte</p>
+      <p class="footer-note">Piano samples from <a href="https://archive.org/details/SalamanderGrandPianoV3" target="_blank" rel="noopener noreferrer">Salamander Grand Piano</a></p>
+    </div>
+  </footer>
+</main>
 
 <style>
   .app-container {
@@ -305,127 +265,81 @@ onMount(() => {
   }
   
   .hero-section {
-    background: linear-gradient(135deg, #0f172a 0%, #312e81 50%, #581c87 100%);
-    color: white;
-    padding: 6rem 1rem;
+    padding: 4rem 0;
     text-align: center;
-    transition: all 0.5s ease;
-    position: relative;
-    overflow: hidden;
-  }
-  
-  .hero-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,5 C75,15 25,15 0,5 Z" fill="rgba(255,255,255,0.2)" /></svg>');
-    background-size: 100% 100%;
-    pointer-events: none;
-  }
-  
-  .hero-section::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-      radial-gradient(circle at top right, rgba(79, 70, 229, 0.3) 0%, transparent 50%),
-      radial-gradient(circle at bottom left, rgba(147, 51, 234, 0.2) 0%, transparent 50%);
-    pointer-events: none;
+    transition: padding 0.3s ease;
+    background-color: var(--light);
   }
   
   .hero-section.compact {
-    padding: 3rem 1rem;
+    padding: 2rem 0;
   }
   
-  .hero-content {
-    position: relative;
-    z-index: 2;
+  :global(body.dark-mode) .hero-section {
+    background-color: var(--dark);
   }
   
   .site-title {
-    font-size: 4rem;
-    margin-bottom: 1.5rem;
-    letter-spacing: -0.05em;
-    line-height: 1.1;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
   }
   
   .intro-text {
-    font-size: 1.4rem;
-    max-width: 650px;
-    margin: 0 auto 3rem;
-    opacity: 0.95;
-    font-weight: 400;
-    line-height: 1.6;
+    max-width: 640px;
+    margin: 0 auto 2rem;
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
   }
   
   .search-container {
-    max-width: 650px;
+    max-width: 600px;
     margin: 0 auto;
+  }
+  
+  .search-form {
+    margin-bottom: 1rem;
   }
   
   .input-wrapper {
     display: flex;
-    background: rgba(255,255,255,0.15);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-radius: var(--radius-full);
-    padding: 0.5rem;
-    box-shadow: var(--shadow-lg);
-    border: 1px solid rgba(255,255,255,0.2);
+    box-shadow: var(--shadow-md);
+    border-radius: var(--radius-md);
     overflow: hidden;
+    transition: box-shadow 0.2s ease;
   }
   
-  .search-form {
-    width: 100%;
+  .input-wrapper:focus-within {
+    box-shadow: var(--shadow-lg);
+  }
+  
+  :global(body.dark-mode) .input-wrapper {
+    box-shadow: var(--shadow-dark-md);
+  }
+  
+  :global(body.dark-mode) .input-wrapper:focus-within {
+    box-shadow: var(--shadow-dark-lg);
   }
   
   .search-input {
     flex-grow: 1;
-    padding: 1rem 1.5rem;
+    padding: 0.75rem 1rem;
     border: none;
-    font-size: 1.1rem;
+    background-color: white;
+    font-size: 1rem;
     outline: none;
-    background: transparent;
-    color: white;
-    width: 100%;
   }
   
-  .search-input::placeholder {
-    color: rgba(255,255,255,0.7);
+  :global(body.dark-mode) .search-input {
+    background-color: var(--surface-dark);
+    color: var(--light);
   }
   
   .search-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: white;
-    color: var(--primary);
-    border: none;
-    border-radius: var(--radius-full);
-    padding: 1rem 1.5rem;
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-  }
-  
-  .search-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  }
-  
-  .search-button:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-    transform: none;
+    border-radius: 0;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
   }
   
   .search-icon {
@@ -433,283 +347,182 @@ onMount(() => {
   }
   
   .error-message {
-    margin-top: 1rem;
-    padding: 1rem;
-    background-color: rgba(239, 68, 68, 0.2);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    border-radius: var(--radius-md);
-    color: white;
     display: flex;
     align-items: center;
-    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background-color: rgba(239, 68, 68, 0.1);
+    border-radius: var(--radius-md);
   }
   
   .error-icon {
-    margin-right: 0.75rem;
-    font-size: 1.2rem;
-  }
-  
-  .content-section {
-    padding: 3rem 1rem;
-    flex-grow: 1;
-  }
-  
-  .header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2.5rem;
-  }
-  
-  .section-title {
-    font-size: 2rem;
-    margin: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    align-items: baseline;
-  }
-  
-  .section-title .username {
-    font-weight: 400;
-    color: var(--text-secondary);
-  }
-  
-  .theme-toggle {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    width: 44px;
-    height: 44px;
-    border-radius: var(--radius-full);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--surface);
-    box-shadow: var(--shadow-md);
-    transition: all 0.3s ease;
-  }
-  
-  .theme-toggle:hover {
-    transform: rotate(20deg) scale(1.1);
-    box-shadow: var(--shadow-lg);
-  }
-
-  :global(body.dark-mode) .theme-toggle {
-    background-color: var(--surface-dark);
-  }
-  
-  .grid-layout {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 2rem;
-    margin-bottom: 2rem;
-  }
-  
-  @media (min-width: 1024px) {
-    .grid-layout {
-      grid-template-columns: 2fr 1fr;
-    }
-  }
-  
-  .graph-container {
-    overflow: hidden;
-  }
-  
-  .controls-container {
-    overflow: hidden;
-  }
-  
-  .share-container {
-    overflow: hidden;
-  }
-  
-  .share-title {
-    font-size: 1.25rem;
-    margin: 0;
-  }
-  
-  .share-link-container {
-    margin-bottom: 2rem;
-  }
-  
-  .link-field {
-    display: flex;
-    border: 1px solid #e5e7eb;
-    border-radius: var(--radius-md);
-    overflow: hidden;
-  }
-  
-  .share-input {
-    flex-grow: 1;
-    padding: 0.75rem 1rem;
-    border: none;
-    font-size: 0.95rem;
-    outline: none;
-    color: var(--text-secondary);
-    background-color: var(--surface);
-  }
-  
-  .copy-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.75rem 1.25rem;
-    border: none;
-    background-color: var(--secondary);
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-  }
-  
-  .copy-icon {
     margin-right: 0.5rem;
   }
   
-  .social-share-container {
+  .dashboard-container {
+    flex: 1;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .controls {
     display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-  
-  .btn-social {
-    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    padding: 0.75rem 1.5rem;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .play-button {
+    display: flex;
+    box-shadow: var(--shadow-md);
     border-radius: var(--radius-md);
-    color: white;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.95rem;
-    transition: all 0.2s ease;
-  }
-  
-  .twitter {
-    background-color: #000000;
-  }
-  
-  .facebook {
-    background-color: #4267B2;
+    align-items: center;
+    overflow: hidden;
+    transition: box-shadow 0.2s ease;
+    gap: 0.5rem;
   }
   
   .icon {
-    margin-right: 0.75rem;
-    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .theme-toggle {
+    padding: 0.65rem;
+    aspect-ratio: 1/1;
+    box-shadow: var(--shadow-md);
+    border-radius: var(--radius-md);
+    align-items: center;
+    overflow: hidden;
+    transition: box-shadow 0.2s ease;
+    gap: 0.5rem;
+  }
+  
+  .share-button {
+    margin-left: auto;
+    box-shadow: var(--shadow-md);
+    border-radius: var(--radius-md);
+    align-items: center;
+    overflow: hidden;
+    transition: box-shadow 0.2s ease;
+  }
+  
+  .content-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  @media (min-width: 768px) {
+    .content-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  
+  .graph-panel, .playback-panel {
+    height: 100%;
   }
   
   .app-footer {
+    margin-top: auto;
+    padding: 1.5rem 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
     text-align: center;
-    padding: 2rem 1rem;
-    background-color: var(--dark);
-    color: white;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+  }
+  
+  :global(body.dark-mode) .app-footer {
+    border-color: rgba(255, 255, 255, 0.05);
   }
   
   .footer-note {
-    font-size: 0.9rem;
-    opacity: 0.7;
     margin-top: 0.5rem;
+    font-size: 0.75rem;
   }
   
-  .heart {
-    color: #ff4d4d;
-    display: inline-block;
-    animation: pulse 1.5s infinite;
+  .footer-note a {
+    color: var(--primary);
+    text-decoration: none;
+  }
+  
+  .footer-note a:hover {
+    text-decoration: underline;
   }
   
   .loading-spinner {
     display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 3px solid rgba(255,255,255,0.3);
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
     border-top-color: white;
     animation: spin 1s ease-in-out infinite;
   }
   
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-  
-  /* Visualizer styling */
   .visualizer-container {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    pointer-events: none;
-    opacity: 0;
     z-index: -1;
+    opacity: 0;
     transition: opacity 0.5s ease;
+    pointer-events: none;
   }
   
   .visualizer-container.active {
-    opacity: 0.3;
     z-index: 0;
+    opacity: 1;
   }
   
-  /* Responsive styling */
-  @media (max-width: 768px) {
-    .site-title {
-      font-size: 2.75rem;
-      margin-bottom: 1rem;
-    }
-    
-    .intro-text {
-      font-size: 1.1rem;
-      margin-bottom: 2rem;
-    }
-    
-    .hero-section {
-      padding: 4rem 1rem;
-    }
-    
-    .hero-section.compact {
-      padding: 2rem 1rem;
-    }
-    
-    .input-wrapper {
-      flex-direction: column;
-      border-radius: var(--radius-lg);
-    }
-    
-    .search-input {
-      padding: 0.75rem 1rem;
-      width: 100%;
-      text-align: center;
-    }
-    
-    .search-button {
-      width: 100%;
-      margin-top: 0.5rem;
-      border-radius: var(--radius-md);
-    }
-    
-    .section-title {
-      font-size: 1.5rem;
-    }
-    
-    .share-link-container {
-      flex-direction: column;
-    }
-    
-    .social-share-container {
-      justify-content: center;
-    }
+  .visualizer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.7) 100%);
+    backdrop-filter: blur(8px);
   }
   
-  @media (max-width: 480px) {
-    .site-title {
-      font-size: 2rem;
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  
+  .animate-fadeIn {
+    animation: fadeIn 0.8s ease-out;
+  }
+  
+  .animate-slideInUp {
+    animation: slideInUp 0.5s ease-out;
+  }
+  
+  .delay-100 {
+    animation-delay: 100ms;
+  }
+  
+  .delay-200 {
+    animation-delay: 200ms;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
     }
-    
-    .section-title {
-      font-size: 1.5rem;
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 </style>

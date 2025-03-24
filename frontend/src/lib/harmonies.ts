@@ -54,22 +54,16 @@ export const harmonizedScales: Record<string, MusicScale> = {
 
 // Collection of available harmony progressions
 export const harmonies: Record<string, Harmony> = {
-  simple: {
-    name: 'Simple',
+  positive: {
+    name: 'Positive',
     chords: [
       { notes: ['C2', 'E3'], scale: harmonizedScales.i.notes },
       { notes: ['A1', 'C3'], scale: harmonizedScales.vi.notes },
       { notes: ['E2', 'C3'], scale: harmonizedScales.i.notes },
-      { notes: ['F2', 'A3'], scale: harmonizedScales.iv.notes } 
-    ]
-  },
-  jazz: {
-    name: 'Jazz',
-    chords: [
-      { notes: ['D2', 'C3', 'F3'], scale: harmonizedScales.ii.notes },
-      { notes: ['G2', 'F3', 'B3'], scale: harmonizedScales.v.notes },
-      { notes: ['C3', 'E3', 'B3'], scale: harmonizedScales.i.notes },
-      { notes: ['A2', 'G3', 'C4'], scale: harmonizedScales.vi.notes }
+      { notes: ['F2', 'A3'], scale: harmonizedScales.iv.notes },
+      { notes: ['D2', 'F3'], scale: harmonizedScales.ii.notes },
+      { notes: ['G2', 'G3'], scale: harmonizedScales.v.notes },
+      { notes: ['C2', 'E3'], scale: harmonizedScales.i.notes }
     ]
   },
   dreamy: {

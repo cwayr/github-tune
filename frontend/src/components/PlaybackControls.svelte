@@ -1,12 +1,12 @@
 <script lang="ts">
   import type { PlaybackSettings, MusicScale } from '../config/types';
   import { getAvailableHarmonies } from '../lib/harmonies';
+  import { audioEngine } from '../lib/audio-engine';
   import { createEventDispatcher } from 'svelte';
   
   const dispatch = createEventDispatcher();
   
   export let settings: PlaybackSettings;
-  export let availableScales: MusicScale[];
   
   const availableHarmonies = getAvailableHarmonies();
   
@@ -34,7 +34,7 @@
         }
       });
     } else {
-      const selectedScale = availableScales.find((s: MusicScale) => s.name === target.value);
+      const selectedScale = audioEngine.getAvailableScales(false).find((s: MusicScale) => s.name === target.value);
       if (selectedScale) {
         updateSettings({ 
           ...settings, 
@@ -125,7 +125,7 @@
                 </option>
               {/each}
             {:else}
-              {#each availableScales as scale}
+              {#each audioEngine.getAvailableScales(false) as scale}
                 <option value={scale.name} selected={settings.scale.name === scale.name}>
                   {scale.name}
                 </option>

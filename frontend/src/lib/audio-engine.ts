@@ -78,8 +78,8 @@ class AudioEngine {
     return this.initPromise;
   }
   
-  public getAvailableScales(): MusicScale[] {
-    return getAvailableScales();
+  public getAvailableScales(harmonyEnabled: boolean = false): MusicScale[] {
+    return getAvailableScales(harmonyEnabled);
   }
   
   public async playContributionWeek(

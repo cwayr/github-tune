@@ -218,17 +218,17 @@ onMount(() => {
           {/if}
         </button>
         
-        <button class="btn theme-toggle" on:click={toggleTheme} aria-label="Toggle theme">
-          {#if theme === 'light'}
-            <Moon size={24}/>
-          {:else}
-            <Sun size={24}/>
-          {/if}
-        </button>
-        
-        <div class="share-button">
-          <button class="btn share-btn" on:click={copyShareLink} aria-label="Copy share link">
+        <div class="right-controls">
+          <button class="btn share-button" on:click={copyShareLink} aria-label="Copy share link">
             <Share size={16}/> <span>Share</span>
+          </button>
+          
+          <button class="btn theme-toggle" on:click={toggleTheme} aria-label="Toggle theme">
+            {#if theme === 'light'}
+              <Moon size={24}/>
+            {:else}
+              <Sun size={24}/>
+            {/if}
           </button>
         </div>
       </div>
@@ -247,7 +247,6 @@ onMount(() => {
           <PlaybackControls 
             on:settingsUpdate={updateSettings} 
             settings={playbackSettings} 
-            availableScales={audioEngine.getAvailableScales()}
           />
         </div>
       </div>
@@ -382,12 +381,18 @@ onMount(() => {
   
   .play-button {
     display: flex;
+    background-color: var(--surface);
     box-shadow: var(--shadow-md);
     border-radius: var(--radius-md);
     align-items: center;
     overflow: hidden;
-    transition: box-shadow 0.2s ease;
+    transition: box-shadow 0.2s ease, background-color 0.3s ease;
     gap: 0.5rem;
+  }
+  
+  :global(body.dark-mode) .play-button {
+    background-color: var(--surface-dark);
+    box-shadow: var(--shadow-dark-md);
   }
   
   .icon {
@@ -397,29 +402,41 @@ onMount(() => {
   }
   
   .theme-toggle {
-    padding: 0.65rem;
-    aspect-ratio: 1/1;
+    background-color: var(--surface);
     box-shadow: var(--shadow-md);
     border-radius: var(--radius-md);
     align-items: center;
     overflow: hidden;
-    transition: box-shadow 0.2s ease;
+    transition: box-shadow 0.2s ease, background-color 0.3s ease;
     gap: 0.5rem;
   }
   
-  .share-button {
-    margin-left: auto;
-    box-shadow: var(--shadow-md);
-    border-radius: var(--radius-md);
-    align-items: center;
-    overflow: hidden;
-    transition: box-shadow 0.2s ease;
+  :global(body.dark-mode) .theme-toggle {
+    background-color: var(--surface-dark);
+    box-shadow: var(--shadow-dark-md);
   }
   
-  .share-btn {
+  .right-controls {
     display: flex;
+    margin-left: auto;
+    gap: 0.75rem;
     align-items: center;
+  }
+
+  .share-button {
+    background-color: var(--surface);
+    box-shadow: var(--shadow-md);
+    border-radius: var(--radius-md);
+    align-items: center;
+    overflow: hidden;
+    transition: box-shadow 0.2s ease, background-color 0.3s ease;
+    display: flex;
     gap: 0.5rem;
+  }
+  
+  :global(body.dark-mode) .share-button {
+    background-color: var(--surface-dark);
+    box-shadow: var(--shadow-dark-md);
   }
   
   .content-grid {
@@ -427,10 +444,10 @@ onMount(() => {
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
-  
+
   @media (min-width: 768px) {
     .content-grid {
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 2fr 1fr;
     }
   }
   

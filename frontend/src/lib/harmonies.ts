@@ -27,27 +27,27 @@ export const simpleScales: Record<string, MusicScale> = {
 
 export const harmonizedScales: Record<string, MusicScale> = {
   i: {
-    name: 'cmaj',
+    name: 'C Major',
     notes: ['C4', 'E4', 'G4', 'C5', 'D5', 'E5', 'G5', 'E6']
   },
   ii: {
-    name: 'dmin',
+    name: 'D Minor',
     notes: ['C4', 'F4', 'A4', 'C5', 'D5', 'E4', 'A5', 'C6']
   },
   iii: {
-    name: 'emin',
+    name: 'E Minor',
     notes: ['B3', 'E4', 'G4', 'A4', 'B4', 'D5', 'G5', 'B5']
   },
   iv: {
-    name: 'fmaj',
+    name: 'F Major',
     notes: ['C4', 'F4', 'A4', 'C5', 'E5', 'G5', 'A5', 'C6']
   },
   v: {
-    name: 'gmaj',
+    name: 'G Major',
     notes: ['B3', 'D4', 'G4', 'B4', 'D4', 'G5', 'A5', 'B5']
   },
   vi: {
-    name: 'amin',
+    name: 'A Minor',
     notes: ['C4', 'E4', 'G4', 'A4', 'C5', 'E5', 'B5', 'C6']
   }
 }
@@ -135,10 +135,11 @@ export function getAvailableHarmonies(): Harmony[] {
 
 /**
  * Get all available scales
+ * @param harmonyEnabled - Whether harmony mode is enabled
  * @returns Array of all scale objects
  */
-export function getAvailableScales(): MusicScale[] {
-  return Object.values(simpleScales);
+export function getAvailableScales(harmonyEnabled: boolean = false): MusicScale[] {
+  return harmonyEnabled ? Object.values(harmonizedScales) : Object.values(simpleScales);
 }
 
 /**

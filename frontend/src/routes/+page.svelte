@@ -486,10 +486,15 @@ onMount(() => {
     display: inline-block;
     width: 1.25rem;
     height: 1.25rem;
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    border: 2px solid rgba(0, 0, 0, 0.3);
     border-radius: 50%;
-    border-top-color: white;
+    border-top-color: black;
     animation: spin 1s ease-in-out infinite;
+  }
+
+  :global(body.dark-mode) .loading-spinner {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
   }
   
   .visualizer-container {

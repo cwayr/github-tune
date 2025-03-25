@@ -172,7 +172,7 @@ function isCurrentDay(weekIndex: number, dayIndex: number): boolean {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0.25rem 0;
+    margin: 0.75rem 0;
     padding: 0 1.25rem;
   }
 
@@ -228,27 +228,26 @@ function isCurrentDay(weekIndex: number, dayIndex: number): boolean {
 
   .graph-container {
     display: flex;
-    padding: 0 1.25rem 1.25rem;
+    padding: 0 1.25rem 1rem;
   }
 
   .weekday-labels {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding-top: 25px;
     padding-right: 8px;
     font-size: 0.75rem;
     color: var(--text-secondary);
-    margin-bottom: 40px;
+    margin: 12px 4px 12px 0;
   }
 
   .weeks-container {
     display: flex;
     overflow-x: auto;
-    padding: 25px 0;
-    scrollbar-width: thin;
+    padding: 10px 0;
+    scrollbar-width: none;
     gap: 5px;
-    min-height: 220px;
+    min-height: 120px;
     position: relative;
   }
 

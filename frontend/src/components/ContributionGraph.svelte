@@ -8,6 +8,7 @@ export let isPlaying: boolean = false;
 
 let weeksContainer: HTMLDivElement;
 let currentMonth: string = '';
+let previousDay: number | null = null;
 
 $: if (!isPlaying) {
   currentMonth = '';
@@ -58,6 +59,17 @@ function getContributionColor(count: number): string {
 function isActiveWeek(week: number): boolean {
   return currentPosition?.week === week;
 }
+
+function isCurrentDayOrPassed(weekIndex: number, dayIndex: number): boolean {
+  if (!currentPosition || !isPlaying) return false;
+  if (weekIndex !== currentPosition.week) return false;
+  return dayIndex <= currentPosition.day;
+}
+
+function isCurrentDay(weekIndex: number, dayIndex: number): boolean {
+  if (!currentPosition || !isPlaying) return false;
+  return weekIndex === currentPosition.week && dayIndex === currentPosition.day;
+}
 </script>
 
 <div class="contribution-graph">
@@ -105,7 +117,10 @@ function isActiveWeek(week: number): boolean {
           <div class="week {isActiveWeek(weekIndex) ? 'active-week-container' : ''}">
             {#each week.days as day, dayIndex}
               <div
-                class="day-cell {isActiveWeek(weekIndex) ? 'active-week' : ''} {isActiveWeek(weekIndex) && day.count > 0 ? 'contribution-flash' : ''}"
+                class="day-cell {isActiveWeek(weekIndex) ? 'active-week' : ''} 
+                       {isActiveWeek(weekIndex) && day.count > 0 ? 'contribution-flash' : ''}
+                       {isCurrentDay(weekIndex, dayIndex) ? 'current-day' : ''}
+                       {isActiveWeek(weekIndex) && day.count === 0 ? 'progress-day' : ''}"
                 style="background-color: {getContributionColor(day.count)};"
                 data-count={day.count}
                 data-date={day.date}
@@ -281,6 +296,7 @@ function isActiveWeek(week: number): boolean {
 
   .active-week {
     z-index: 10;
+    box-shadow: 0 0 0 1px var(--primary) !important;
   }
 
   .day-cell .tooltip {
@@ -327,6 +343,34 @@ function isActiveWeek(week: number): boolean {
 
   .contribution-flash {
     animation: contribution-flash-animation 1s ease-in-out;
+    /* Ensure the box-shadow from active-week is still visible */
+    box-shadow: 0 0 0 1px var(--primary), 0 0 8px 2px rgba(16, 185, 129, 0.5);
+  }
+
+  .progress-day {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-day::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+    animation: progress-pulse 2s ease-in-out infinite;
+  }
+
+  .current-day {
+    box-shadow: 0 0 0 1px var(--primary) !important;
+    z-index: 15;
+  }
+
+  :global(body.dark-mode) .progress-day::after {
+    background: rgba(255, 255, 255, 0.05);
   }
 
   :global(body.dark-mode) .contribution-flash {
@@ -341,22 +385,34 @@ function isActiveWeek(week: number): boolean {
   @keyframes contribution-flash-animation {
     0% {
       filter: brightness(1.5);
-      box-shadow: 0 0 8px 2px rgba(16, 185, 129, 0.5);
+      box-shadow: 0 0 0 1px var(--primary), 0 0 8px 2px rgba(16, 185, 129, 0.5);
     }
     100% {
       filter: brightness(1);
-      box-shadow: none;
+      box-shadow: 0 0 0 1px var(--primary);
     }
   }
 
   @keyframes contribution-flash-animation-dark {
     0% {
-      filter: brightness(1);
-      box-shadow: 0 0 8px 2px rgba(76, 175, 80, 0.5);
+      filter: brightness(1.8);
+      box-shadow: 0 0 0 1px var(--primary), 0 0 8px 2px rgba(76, 175, 80, 0.7);
     }
     100% {
       filter: brightness(1);
-      box-shadow: none;
+      box-shadow: 0 0 0 1px var(--primary);
+    }
+  }
+
+  @keyframes progress-pulse {
+    0% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 0.2;
+    }
+    100% {
+      opacity: 0.6;
     }
   }
 </style>

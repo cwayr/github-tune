@@ -1,12 +1,10 @@
-/**
- * Harmonies and scales for GitHub contribution melodies
- * Each harmony is a progression of chord notes that will play at specified intervals
- */
 import type { MusicScale } from '../config/types';
+
+type ScaleOptions = [string, string, string][];
 
 export interface Chord {
   notes: string[];
-  scale: string[];
+  scale: ScaleOptions;
 }
 
 export interface Harmony {
@@ -17,38 +15,102 @@ export interface Harmony {
 export const simpleScales: Record<string, MusicScale> = {
   joyful: {
     name: 'Joyful',
-    notes: ['C4', 'E4', 'G4', 'B4', 'D5', 'E5', 'G5', 'E6']
+    notes: [
+      ['C2', 'F3', 'A3'], 
+      ['G3', 'C4', 'D4'],
+      ['D4', 'E4', 'G4'],
+      ['G4', 'B4', 'D5'],
+      ['C5', 'E5', 'F5'],
+      ['E5', 'G5', 'B5'],
+      ['G5', 'C6', 'D6'],
+    ]
   },
   melancholy: {
     name: 'Melancholy',
-    notes: ['A2', 'C4', 'D4', 'E4', 'G4', 'B4', 'C5', 'G5']
+    notes: [
+      ['A2', 'D2', 'E2'], 
+      ['E3', 'A3', 'D4'],
+      ['A3', 'B3', 'C4'],
+      ['C4', 'G4', 'A4'],
+      ['G4', 'A4', 'B4'],
+      ['B4', 'C5', 'D5'],
+      ['E5', 'F5', 'G5'],
+    ]
   }
 }
 
 export const harmonizedScales: Record<string, MusicScale> = {
   i: {
     name: 'C Major',
-    notes: ['C4', 'E4', 'G4', 'C5', 'D5', 'E5', 'G5', 'E6']
+    notes: [
+      ['C4', 'D4', 'E4'], 
+      ['E4', 'G4', 'C5'],
+      ['G4', 'B4', 'D5'],
+      ['B4', 'C5', 'D5'],
+      ['D5', 'E5', 'G5'],
+      ['E5', 'G5', 'C6'],
+      ['C6', 'B5', 'D6'],
+    ]
   },
   ii: {
     name: 'D Minor',
-    notes: ['C4', 'F4', 'A4', 'C5', 'D5', 'E4', 'A5', 'C6']
+    notes: [
+      ['D4', 'E4', 'F4'], 
+      ['F4', 'A4', 'C5'],
+      ['A4', 'C5', 'D5'],
+      ['C5', 'D5', 'E5'],
+      ['D5', 'E5', 'F5'],
+      ['F5', 'G5', 'A5'],
+      ['D6', 'C6', 'E6'],
+    ]
   },
   iii: {
     name: 'E Minor',
-    notes: ['B3', 'E4', 'G4', 'A4', 'B4', 'D5', 'G5', 'B5']
+    notes: [
+      ['B3', 'D4', 'E4'], 
+      ['E4', 'G4', 'A4'],
+      ['G4', 'B4', 'D5'],
+      ['B4', 'D5', 'E5'],
+      ['D5', 'E5', 'G5'],
+      ['G5', 'A5', 'B5'],
+      ['B5', 'E6', 'G6'],
+    ]
   },
   iv: {
     name: 'F Major',
-    notes: ['C4', 'F4', 'A4', 'C5', 'E5', 'G5', 'A5', 'C6']
+    notes: [
+      ['C4', 'E4', 'F4'], 
+      ['F4', 'G4', 'A4'],
+      ['A4', 'C5', 'E5'],
+      ['C5', 'E5', 'F5'],
+      ['E5', 'F5', 'G5'],
+      ['G5', 'A5', 'C6'],
+      ['A5', 'C6', 'E6'],
+    ]
   },
   v: {
     name: 'G Major',
-    notes: ['B3', 'D4', 'G4', 'B4', 'D4', 'G5', 'A5', 'B5']
+    notes: [
+      ['D4', 'G4', 'A4'], 
+      ['G4', 'A4', 'B4'],
+      ['A4', 'B4', 'D5'],
+      ['D5', 'G5', 'A5'],
+      ['G5', 'A5', 'B5'],
+      ['B5', 'C6', 'D6'],
+      ['D6', 'G6', 'A6'],
+    ]
   },
   vi: {
     name: 'A Minor',
-    notes: ['C4', 'E4', 'G4', 'A4', 'C5', 'E5', 'B5', 'C6']
+    notes: [
+      ['C4', 'D4', 'E4'], 
+      ['E4', 'G4', 'A4'],
+      ['G4', 'A4', 'C5'],
+      ['B4', 'C5', 'E5'],
+      ['E5', 'G5', 'A5'],
+      ['A5', 'B5', 'C6'],
+      ['C6', 'B5', 'D6'],
+    ]
   }
 }
 
@@ -57,52 +119,52 @@ export const harmonies: Record<string, Harmony> = {
   positive: {
     name: 'Positive',
     chords: [
-      { notes: ['C2', 'E3'], scale: harmonizedScales.i.notes },
-      { notes: ['A1', 'C3'], scale: harmonizedScales.vi.notes },
-      { notes: ['E2', 'C3'], scale: harmonizedScales.i.notes },
-      { notes: ['F2', 'A3'], scale: harmonizedScales.iv.notes },
-      { notes: ['D2', 'F3'], scale: harmonizedScales.ii.notes },
-      { notes: ['G2', 'G3'], scale: harmonizedScales.v.notes },
-      { notes: ['C2', 'E3'], scale: harmonizedScales.i.notes }
+      { notes: ['C2', 'E3'], scale: harmonizedScales.i.notes as ScaleOptions },
+      { notes: ['A1', 'C3'], scale: harmonizedScales.vi.notes as ScaleOptions },
+      { notes: ['E2', 'C3'], scale: harmonizedScales.i.notes as ScaleOptions },
+      { notes: ['F2', 'A3'], scale: harmonizedScales.iv.notes as ScaleOptions },
+      { notes: ['D2', 'F3'], scale: harmonizedScales.ii.notes as ScaleOptions },
+      { notes: ['G2', 'G3'], scale: harmonizedScales.v.notes as ScaleOptions },
+      { notes: ['C2', 'E3'], scale: harmonizedScales.i.notes as ScaleOptions }
     ]
   },
   dreamy: {
     name: 'Dreamy',
     chords: [
-      { notes: ['F2', 'A3'], scale: harmonizedScales.iv.notes },
-      { notes: ['C2', 'E3'], scale: harmonizedScales.i.notes },
-      { notes: ['G2', 'B3'], scale: harmonizedScales.v.notes },
-      { notes: ['A2', 'C4'], scale: harmonizedScales.vi.notes }
+      { notes: ['F2', 'A3'], scale: harmonizedScales.iv.notes as ScaleOptions },
+      { notes: ['C2', 'E3'], scale: harmonizedScales.i.notes as ScaleOptions },
+      { notes: ['G2', 'B3'], scale: harmonizedScales.v.notes as ScaleOptions },
+      { notes: ['A2', 'C4'], scale: harmonizedScales.vi.notes as ScaleOptions }
     ]
   },
   melancholy: {
     name: 'Melancholy',
     chords: [
-      { notes: ['A2', 'C4'], scale: harmonizedScales.vi.notes },
-      { notes: ['E2', 'G3'], scale: harmonizedScales.iii.notes },
-      { notes: ['F2', 'A3'], scale: harmonizedScales.iv.notes },
-      { notes: ['G2', 'B3'], scale: harmonizedScales.v.notes }
+      { notes: ['A2', 'C4'], scale: harmonizedScales.vi.notes as ScaleOptions },
+      { notes: ['E2', 'G3'], scale: harmonizedScales.iii.notes as ScaleOptions },
+      { notes: ['F2', 'A3'], scale: harmonizedScales.iv.notes as ScaleOptions },
+      { notes: ['G2', 'B3'], scale: harmonizedScales.v.notes as ScaleOptions }
     ]
   },
   interstellar: {
     name: 'Interstellar',
     chords: [
-      { notes: ['F2', 'E4'], scale: harmonizedScales.iv.notes },
-      { notes: ['G2', 'E4'], scale: harmonizedScales.iii.notes },
-      { notes: ['A2', 'E4'], scale: harmonizedScales.vi.notes },
-      { notes: ['G2', 'E4'], scale: harmonizedScales.iii.notes }
+      { notes: ['F2', 'E4'], scale: harmonizedScales.iv.notes as ScaleOptions },
+      { notes: ['G2', 'E4'], scale: harmonizedScales.iii.notes as ScaleOptions },
+      { notes: ['A2', 'E4'], scale: harmonizedScales.vi.notes as ScaleOptions },
+      { notes: ['G2', 'E4'], scale: harmonizedScales.iii.notes as ScaleOptions }
     ]
   },
   inception: {
     name: 'Inception',
     chords: [
-      { notes: ['D3', 'F3'], scale: harmonizedScales.ii.notes },
-      { notes: ['A2', 'C4'], scale: harmonizedScales.vi.notes },
-      { notes: ['C3', 'E3'], scale: harmonizedScales.i.notes },
-      { notes: ['G2', 'B3'], scale: harmonizedScales.v.notes },
-      { notes: ['D3', 'F3'], scale: harmonizedScales.ii.notes },
-      { notes: ['F2', 'E4'], scale: harmonizedScales.iv.notes },
-      { notes: ['C3', 'E3'], scale: harmonizedScales.i.notes }
+      { notes: ['D3', 'F3'], scale: harmonizedScales.ii.notes as ScaleOptions },
+      { notes: ['A2', 'C4'], scale: harmonizedScales.vi.notes as ScaleOptions },
+      { notes: ['C3', 'E3'], scale: harmonizedScales.i.notes as ScaleOptions },
+      { notes: ['G2', 'B3'], scale: harmonizedScales.v.notes as ScaleOptions },
+      { notes: ['D3', 'F3'], scale: harmonizedScales.ii.notes as ScaleOptions },
+      { notes: ['F2', 'E4'], scale: harmonizedScales.iv.notes as ScaleOptions },
+      { notes: ['C3', 'E3'], scale: harmonizedScales.i.notes as ScaleOptions }
     ]
   }
 };
@@ -116,11 +178,9 @@ export const harmonies: Record<string, Harmony> = {
  */
 export function getHarmonyChord(harmony: Harmony, weekIndex: number, interval: number): Chord {
   if (interval <= 0) {
-    // If interval is invalid, default to 1
     interval = 1;
   }
   
-  // Calculate which chord in the progression to use based on weekIndex and interval
   const progressionIndex = Math.floor(weekIndex / interval) % harmony.chords.length;
   return harmony.chords[progressionIndex];
 }

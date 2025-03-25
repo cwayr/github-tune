@@ -159,7 +159,17 @@ class AudioEngine {
         weekData.days.forEach((day, dayIndex) => {
           if (day.count > 0) {
             // Map day index to a note in the active scale
-            const note = activeScale.notes[dayIndex % activeScale.notes.length];
+            const noteSet = activeScale.notes[dayIndex % activeScale.notes.length];
+            
+            // Select note based on contribution count
+            let noteIndex = 0; // Default to first note (1-2 contributions)
+            if (day.count >= 7) {
+              noteIndex = 2; // Third note for 7+ contributions
+            } else if (day.count >= 3) {
+              noteIndex = 1; // Second note for 3-6 contributions
+            }
+            
+            const note = noteSet[noteIndex];
             notesToPlay.push(note);
             this.activeNotes.push(note);
           }

@@ -14,7 +14,7 @@ export interface ContributionYear {
 
 export interface MusicScale {
   name: string;
-  notes: string[];
+  notes: [string, string, string][];
 }
 
 export interface HarmonySettings {

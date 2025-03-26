@@ -11,6 +11,7 @@ import ContributionGraph from '../components/ContributionGraph.svelte';
 import PlaybackControls from '../components/PlaybackControls.svelte';
 import Tip from '../components/Tip.svelte';
 import { audioEngine } from '../lib/audio-engine';
+import { getAvailableHarmonies } from '../lib/harmonies';
 import type { ContributionYear, PlaybackSettings } from '../config/types';
 
 let username = '';
@@ -170,7 +171,19 @@ function toggleTheme() {
 
 function generateShareLink(): string {
   const baseUrl = window.location.origin;
-  return `${baseUrl}?user=${encodeURIComponent(username)}`;
+  const params = new URLSearchParams();
+  
+  // Add username
+  params.set('user', username);
+  
+  // Add playback settings
+  params.set('speed', playbackSettings.speed.toString());
+  params.set('harmony', playbackSettings.harmony.enabled ? '1' : '0');
+  params.set('mood', playbackSettings.harmony.enabled ? 
+    playbackSettings.harmony.name : 
+    playbackSettings.scale.name);
+  
+  return `${baseUrl}?${params.toString()}`;
 }
 
 async function copyShareLink() {
@@ -192,8 +205,42 @@ async function copyShareLink() {
 onMount(() => {
   const params = new URLSearchParams(window.location.search);
   const userParam = params.get('user');
+  
   if (userParam) {
     username = userParam;
+    
+    // Parse playback settings from URL if available
+    const speedParam = params.get('speed');
+    if (speedParam) {
+      const speed = parseFloat(speedParam);
+      if (!isNaN(speed) && speed >= 0.5 && speed <= 2.0) {
+        playbackSettings.speed = speed;
+      }
+    }
+    
+    const harmonyParam = params.get('harmony');
+    if (harmonyParam) {
+      playbackSettings.harmony.enabled = harmonyParam === '1';
+    }
+    
+    const moodParam = params.get('mood');
+    if (moodParam) {
+      if (playbackSettings.harmony.enabled) {
+        // Set harmony mood if harmony is enabled
+        const availableHarmonies = getAvailableHarmonies().map((h: { name: string }) => h.name.toLowerCase());
+        if (availableHarmonies.includes(moodParam.toLowerCase())) {
+          playbackSettings.harmony.name = moodParam.toLowerCase();
+        }
+      } else {
+        // Set scale if harmony is not enabled
+        const availableScales = audioEngine.getAvailableScales(false);
+        const scale = availableScales.find(s => s.name.toLowerCase() === moodParam.toLowerCase());
+        if (scale) {
+          playbackSettings.scale = scale;
+        }
+      }
+    }
+    
     fetchContributions();
     showIntro = false;
   }

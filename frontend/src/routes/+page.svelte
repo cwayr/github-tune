@@ -96,7 +96,16 @@ async function togglePlay() {
       startPlayback();
       
       showSoundTip = false;
-      soundTipShown = true;
+      
+      if (!soundTipShown) {
+        soundTipShown = true;
+        // Save to localStorage that sound tip has been shown
+        try {
+          localStorage.setItem('soundTipShown', 'true');
+        } catch (e) {
+          console.warn('Could not save to localStorage:', e);
+        }
+      }
       
       if (!harmonyTipShown && !playbackSettings.harmony.enabled) {
         setTimeout(() => {
@@ -154,7 +163,16 @@ function updateSettings(event: CustomEvent | { detail: any }) {
   playbackSettings = event.detail;
   
   if (playbackSettings.harmony.enabled) {
-    harmonyTipShown = true;
+    if (!harmonyTipShown) {
+      harmonyTipShown = true;
+      // Save to localStorage that harmony tip has been shown
+      try {
+        localStorage.setItem('harmonyTipShown', 'true');
+      } catch (e) {
+        console.warn('Could not save to localStorage:', e);
+      }
+    }
+    
     showHarmonyTip = false;
     
     if (harmonyTipTimer) {
@@ -203,6 +221,15 @@ async function copyShareLink() {
 }
 
 onMount(() => {
+  // Check localStorage for previously shown tips
+  try {
+    soundTipShown = localStorage.getItem('soundTipShown') === 'true';
+    harmonyTipShown = localStorage.getItem('harmonyTipShown') === 'true';
+  } catch (e) {
+    // If localStorage is not available, continue without it
+    console.warn('LocalStorage not available:', e);
+  }
+
   const params = new URLSearchParams(window.location.search);
   const userParam = params.get('user');
   
@@ -245,6 +272,7 @@ onMount(() => {
     showIntro = false;
   }
   
+  // Only show sound tip if it hasn't been shown before
   setTimeout(() => {
     if (!isPlaying && !soundTipShown) {
       showSoundTip = true;

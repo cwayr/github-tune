@@ -6,8 +6,10 @@ import Square from '@lucide/svelte/icons/square';
 import Moon from '@lucide/svelte/icons/moon';
 import Sun from '@lucide/svelte/icons/sun';
 import Share from '@lucide/svelte/icons/share';
+import Volume2 from '@lucide/svelte/icons/volume-2';
 import ContributionGraph from '../components/ContributionGraph.svelte';
 import PlaybackControls from '../components/PlaybackControls.svelte';
+import Tip from '../components/Tip.svelte';
 import { audioEngine } from '../lib/audio-engine';
 import type { ContributionYear, PlaybackSettings } from '../config/types';
 
@@ -28,6 +30,18 @@ let loading = false;
 let errorMessage = '';
 let showIntro = true;
 let visualizerMode = false;
+
+let showSoundTip = false;
+let showHarmonyTip = false;
+let showCopiedTip = false;
+let soundTipShown = false;
+let harmonyTipShown = false;
+
+let soundTipTimer: ReturnType<typeof setTimeout> | null = null;
+let harmonyTipTimer: ReturnType<typeof setTimeout> | null = null;
+let copiedTipTimer: ReturnType<typeof setTimeout> | null = null;
+
+const tipDuration = 6000;
 
 const fnUrl = import.meta.env.VITE_FN_URL || 'https://mbmavarqr6s4kqsvpv7g57zqca0gzhtp.lambda-url.us-east-1.on.aws/';
 console.log('Frontend FN URL:', fnUrl);
@@ -74,13 +88,26 @@ async function togglePlay() {
   if (isPlaying) {
     stopPlayback();
   } else {
-    // Explicitly start Tone.js context on user interaction to comply with browser autoplay policies
     try {
-      // Import Tone dynamically to avoid SSR issues
       const Tone = await import('tone');
       await Tone.start();
       console.log('Tone.js context started on user interaction');
       startPlayback();
+      
+      showSoundTip = false;
+      soundTipShown = true;
+      
+      if (!harmonyTipShown && !playbackSettings.harmony.enabled) {
+        setTimeout(() => {
+          if (!playbackSettings.harmony.enabled) {
+            showHarmonyTip = true;
+            
+            harmonyTipTimer = setTimeout(() => {
+              showHarmonyTip = false;
+            }, tipDuration);
+          }
+        }, 5000);
+      }
     } catch (err) {
       console.error('Failed to start Tone.js:', err);
       errorMessage = 'Failed to start audio. Please try again.';
@@ -124,6 +151,16 @@ function playWeek(week: number) {
 
 function updateSettings(event: CustomEvent | { detail: any }) {
   playbackSettings = event.detail;
+  
+  if (playbackSettings.harmony.enabled) {
+    harmonyTipShown = true;
+    showHarmonyTip = false;
+    
+    if (harmonyTipTimer) {
+      clearTimeout(harmonyTipTimer);
+      harmonyTipTimer = null;
+    }
+  }
 }
 
 function toggleTheme() {
@@ -139,12 +176,19 @@ function generateShareLink(): string {
 async function copyShareLink() {
   try {
     await navigator.clipboard.writeText(generateShareLink());
+    
+    showCopiedTip = true;
+    
+    if (copiedTipTimer) clearTimeout(copiedTipTimer);
+    
+    copiedTipTimer = setTimeout(() => {
+      showCopiedTip = false;
+    }, tipDuration);
   } catch (err) {
     console.error('Failed to copy: ', err);
   }
 }
 
-// Check for username in URL params on component mount
 onMount(() => {
   const params = new URLSearchParams(window.location.search);
   const userParam = params.get('user');
@@ -153,12 +197,63 @@ onMount(() => {
     fetchContributions();
     showIntro = false;
   }
+  
+  setTimeout(() => {
+    if (!isPlaying && !soundTipShown) {
+      showSoundTip = true;
+      soundTipTimer = setTimeout(() => {
+        showSoundTip = false;
+      }, tipDuration);
+    }
+  }, 3000);
 });
 </script>
 
 <div class="visualizer-container" class:active={visualizerMode}>
   <div class="visualizer"></div>
 </div>
+
+{#if showSoundTip}
+  <Tip 
+    message="Make sure your device sound is on!" 
+    icon={Volume2} 
+    theme={theme} 
+    tipType="sound-tip"
+    duration={tipDuration}
+    on:close={() => {
+      showSoundTip = false;
+      if (soundTipTimer) clearTimeout(soundTipTimer);
+    }}
+  />
+{/if}
+
+{#if showHarmonyTip}
+  <Tip 
+    message="Try 'Harmonized Mode' for preset chord progressions!" 
+    icon={Music} 
+    theme={theme} 
+    tipType="harmony-tip"
+    duration={tipDuration}
+    on:close={() => {
+      showHarmonyTip = false;
+      if (harmonyTipTimer) clearTimeout(harmonyTipTimer);
+    }}
+  />
+{/if}
+
+{#if showCopiedTip}
+  <Tip 
+    message="Link copied to clipboard." 
+    icon={Share} 
+    theme={theme} 
+    tipType="copied-tip"
+    duration={tipDuration}
+    on:close={() => {
+      showCopiedTip = false;
+      if (copiedTipTimer) clearTimeout(copiedTipTimer);
+    }}
+  />
+{/if}
 
 <main class="app-container {theme}">
 
@@ -368,7 +463,7 @@ onMount(() => {
   
   .dashboard-container {
     flex: 1;
-    margin-top: 1rem;
+    margin-top: 0.75rem;
     margin-bottom: 2rem;
   }
   
@@ -557,6 +652,17 @@ onMount(() => {
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+  
+  @keyframes slide-in {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
     }
   }
 </style>

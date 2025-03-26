@@ -8,21 +8,36 @@ export let isPlaying: boolean = false;
 
 let weeksContainer: HTMLDivElement;
 let currentMonth: string = '';
-let previousDay: number | null = null;
+let previousPlayingState: boolean = false;
 
 $: if (!isPlaying) {
   currentMonth = '';
+  
+  if (previousPlayingState && !isPlaying && weeksContainer) {
+    scrollToBeginning();
+  }
+  
+  previousPlayingState = isPlaying;
 }
 
-// Track when currentPosition changes
+$: if (isPlaying) {
+  previousPlayingState = true;
+}
+
+function scrollToBeginning() {
+  if (weeksContainer) {
+    weeksContainer.scrollTo({
+      left: 0,
+      behavior: 'smooth'
+    });
+  }
+}
+
 $: if (currentPosition && weeksContainer && contributionData) {
-  // Get all week elements
   const weekElements = weeksContainer.querySelectorAll('.week');
   if (weekElements.length > 0 && currentPosition.week < weekElements.length) {
-    // Get the current active week element
     const activeWeekElement = weekElements[currentPosition.week];
     if (activeWeekElement) {
-      // Calculate position to center the active week
       const weekLeft = (activeWeekElement as HTMLElement).offsetLeft;
       const scrollPosition = weekLeft - (weeksContainer.clientWidth / 2) + ((activeWeekElement as HTMLElement).offsetWidth / 2);
       weeksContainer.scrollTo({
@@ -30,7 +45,6 @@ $: if (currentPosition && weeksContainer && contributionData) {
         behavior: 'smooth'
       });
       
-      // Update current month based on first day of current week
       if (contributionData.weeks[currentPosition.week]?.days[0]) {
         const firstDayDate = new Date(contributionData.weeks[currentPosition.week].days[0].date);
         const monthName = firstDayDate.toLocaleString('en-US', { month: 'long' });

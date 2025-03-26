@@ -104,7 +104,7 @@
         <div class="harmony-description">
           <p class="mode-description">
             {settings.harmony.enabled ? 
-              'Uses harmonizing chords and changes scales as you play' : 
+              'Uses harmonizing chords and changing scales' : 
               'Only plays notes from days with contributions'}
           </p>
         </div>

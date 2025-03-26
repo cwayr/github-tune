@@ -53,9 +53,9 @@ Root directories:
 
 ## Maintainability and Scalability
 - **Write Self-Documenting Code:** Use descriptive names for variables, functions, and files. Avoid cryptic abbreviations unless they are industry-standard (e.g., `i` for loop index).
-- **Add Comments for Complex Logic:** While code should be self-explanatory, add comments to explain *why* complex logic exists, not just *what* it does.
 - **Plan for Scalability:** Design code with future growth in mind. For example, avoid hardcoding values that might need to change, and prefer configuration files or environment variables.
 - **Use Design Patterns Where Applicable:** Apply patterns like Factory, Singleton, or Observer if they simplify the architecture or solve recurring problems. Don't over-engineer with patterns unnecessarily.
+- **Avoid Side Effects:** Only use comments to document files and functions, or when crucial. Don't add redundant comments that explain the obvious.
 
 ## Testing and Validation
 - **Write Testable Code:** Structure code to be easily testable by keeping functions pure, minimizing dependencies, and using dependency injection where appropriate.

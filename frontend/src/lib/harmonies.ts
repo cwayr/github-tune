@@ -13,16 +13,16 @@ export interface Harmony {
 }
 
 export const simpleScales: Record<string, MusicScale> = {
-  joyful: {
-    name: 'Joyful',
+  bright: {
+    name: 'Bright',
     notes: [
-      ['C2', 'F3', 'A3'], 
+      ['C2', 'F2', 'F2'], 
       ['G3', 'C4', 'D4'],
       ['D4', 'E4', 'G4'],
       ['G4', 'B4', 'D5'],
       ['C5', 'E5', 'F5'],
       ['E5', 'G5', 'B5'],
-      ['G5', 'C6', 'D6'],
+      ['G5', 'B5', 'D6'],
     ]
   },
   melancholy: {
@@ -34,7 +34,7 @@ export const simpleScales: Record<string, MusicScale> = {
       ['C4', 'G4', 'A4'],
       ['G4', 'A4', 'B4'],
       ['B4', 'C5', 'D5'],
-      ['E5', 'F5', 'G5'],
+      ['E5', 'G5', 'A5'],
     ]
   }
 }
@@ -143,7 +143,10 @@ export const harmonies: Record<string, Harmony> = {
       { notes: ['A2', 'C4'], scale: harmonizedScales.vi.notes as ScaleOptions },
       { notes: ['E2', 'G3'], scale: harmonizedScales.iii.notes as ScaleOptions },
       { notes: ['F2', 'A3'], scale: harmonizedScales.iv.notes as ScaleOptions },
-      { notes: ['G2', 'B3'], scale: harmonizedScales.v.notes as ScaleOptions }
+      { notes: ['G2', 'B3'], scale: harmonizedScales.v.notes as ScaleOptions },
+      { notes: ['A2', 'C4'], scale: harmonizedScales.vi.notes as ScaleOptions },
+      { notes: ['E2', 'G3'], scale: harmonizedScales.iii.notes as ScaleOptions },
+      { notes: ['A2', 'C4'], scale: harmonizedScales.vi.notes as ScaleOptions },
     ]
   },
   interstellar: {

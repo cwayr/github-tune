@@ -1,5 +1,4 @@
 import {
-  Fn,
   Stack,
   Duration,
   CfnOutput,
@@ -13,6 +12,9 @@ import {
   aws_cloudfront_origins as origins,
   aws_lambda_nodejs as nodejs_lambda,
 } from 'aws-cdk-lib';
+import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
+import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import * as path from 'path';
 import { Construct } from 'constructs';
 
@@ -20,56 +22,63 @@ export class InfrastructureStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const backendFnsPath = '../../backend/functions'
-    const frontendBuildPath = '../../frontend/build'
+    const namingPrefix = 'ghtune'
+    const rootDomain = 'githubtune.com'
+    const backendFnsPath = '../../backend/functions';
+    const frontendBuildPath = '../../frontend/build';
 
     const environment = this.node.tryGetContext('environment') || 'dev';
     console.log(`Deploying to ${environment} environment`);
-    // const isProd = environment === 'prod';
+    const domainName = environment === 'prod' ? rootDomain : `${environment}.${rootDomain}`;
 
-    const apiFunction = new nodejs_lambda.NodejsFunction(this, 'ct-fetcher', {
-      functionName: 'contribution-tune-fetcher',
-      runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'handler',
-      memorySize: 1024,
-      entry: path.join(
-        __dirname,
-        `${backendFnsPath}/contributionFetcher/index.ts`
-      ),
-      timeout: Duration.seconds(15),
-      bundling: {
-        minify: true,
-        sourceMap: true,
-        externalModules: [],
-        nodeModules: ['cheerio']
-      },
-      logRetention: logs.RetentionDays.ONE_MONTH
+    const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
+      domainName: rootDomain,
     });
 
-    // In infrastructure-stack.ts
-    const functionUrl = apiFunction.addFunctionUrl({
-      authType: lambda.FunctionUrlAuthType.NONE,
-      cors: {
-        allowedOrigins: ['*'],
-        allowedMethods: [lambda.HttpMethod.GET],
-        allowedHeaders: ['content-type']
-      }
+    const certificate = new acm.Certificate(this, 'Certificate', {
+      domainName: rootDomain,
+      subjectAlternativeNames: [`*.${rootDomain}`],
+      validation: acm.CertificateValidation.fromDns(hostedZone),
     });
 
-    const websiteBucket = new s3.Bucket(this, 'ct-srcBucket', {
-      bucketName: 'contribution-tune-src',
+    const websiteBucket = new s3.Bucket(this, `${namingPrefix}-srcBkt-${environment}`, {
+      bucketName: `${namingPrefix}-srcBkt-${environment}`,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
     });
 
-    const distribution = new cloudfront.Distribution(this, 'ct-distribution', {
+    const apiFunction = new nodejs_lambda.NodejsFunction(this, `${namingPrefix}-fetcher-${environment}`, {
+      functionName: `${namingPrefix}-contributionFetcher-${environment}`,
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'handler',
+      memorySize: 1024,
+      entry: path.join(__dirname, `${backendFnsPath}/contributionFetcher/index.ts`),
+      timeout: Duration.seconds(15),
+      bundling: {
+        minify: true,
+        sourceMap: true,
+        externalModules: [],
+        nodeModules: ['cheerio'],
+      },
+      logRetention: logs.RetentionDays.ONE_MONTH,
+    });
+
+    const functionUrl = apiFunction.addFunctionUrl({
+      authType: lambda.FunctionUrlAuthType.NONE,
+      cors: {
+        allowedOrigins: ['*'],
+        allowedMethods: [lambda.HttpMethod.GET],
+        allowedHeaders: ['content-type'],
+      },
+    });
+
+    const distribution = new cloudfront.Distribution(this, `${namingPrefix}-distribution-${environment}`, {
       defaultBehavior: {
         origin: new origins.S3Origin(websiteBucket, {
-          originAccessIdentity: new cloudfront.OriginAccessIdentity(this, 'ct-oai')
+          originAccessIdentity: new cloudfront.OriginAccessIdentity(this, `${namingPrefix}-oai-${environment}`),
         }),
-        viewerProtocolPolicy:
-          cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
       defaultRootObject: 'index.html',
       errorResponses: [
@@ -79,30 +88,31 @@ export class InfrastructureStack extends Stack {
           responsePagePath: '/index.html',
         },
       ],
+      domainNames: [domainName],
+      certificate: certificate,
     });
 
+    new route53.ARecord(this, `AliasRecord-${environment}`, {
+      zone: hostedZone,
+      recordName: domainName,
+      target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(distribution)),
+    });
 
-    console.log('VITE FN URL output ->', functionUrl.url)
-    // Generate a simple config.js file with the function URL
-    const configFile = new s3deploy.BucketDeployment(this, 'ct-configDeployment', {
+    const configFile = new s3deploy.BucketDeployment(this, `${namingPrefix}-configDeployment`, {
       sources: [
-        s3deploy.Source.data(
-          'config.js',
-          `window.ENV = { VITE_FN_URL: "${functionUrl.url}" };`
-        ),
+        s3deploy.Source.data('config.js', `window.ENV = { VITE_FN_URL: "${functionUrl.url}" };`),
       ],
       destinationBucket: websiteBucket,
     });
 
-    const websiteDeployment = new s3deploy.BucketDeployment(this, 'ct-websiteDeployment', {
+    const websiteDeployment = new s3deploy.BucketDeployment(this, `${namingPrefix}-websiteDeployment`, {
       sources: [s3deploy.Source.asset(path.join(__dirname, frontendBuildPath))],
       destinationBucket: websiteBucket,
       distribution,
       distributionPaths: ['/*'],
-      prune: false, // Ensure the config.js isn't removed
+      prune: false,
     });
 
-    // Make sure config is deployed before the website
     websiteDeployment.node.addDependency(configFile);
 
     new CfnOutput(this, 'SiteURL', {

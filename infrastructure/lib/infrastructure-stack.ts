@@ -41,8 +41,8 @@ export class InfrastructureStack extends Stack {
       validation: acm.CertificateValidation.fromDns(hostedZone),
     });
 
-    const websiteBucket = new s3.Bucket(this, `${namingPrefix}-srcBkt-${environment}`, {
-      bucketName: `${namingPrefix}-srcBkt-${environment}`,
+    const websiteBucket = new s3.Bucket(this, `${namingPrefix}-srcbkt-${environment}`, {
+      bucketName: `${namingPrefix}-srcbkt-${environment}`,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteObjects: true,

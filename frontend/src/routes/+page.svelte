@@ -12,10 +12,11 @@ import PlaybackControls from '../components/PlaybackControls.svelte';
 import Tip from '../components/Tip.svelte';
 import { audioEngine } from '../lib/audio-engine';
 import { getAvailableHarmonies } from '../lib/harmonies';
-import type { ContributionYear, PlaybackSettings } from '../config/types';
+import type { AllContributions, PlaybackSettings } from '../config/types';
 
 let username = '';
-let contributionData: ContributionYear | null = null;
+let contributionData: AllContributions | null = null;
+let selectedYear = 'lastYear';
 let isPlaying = false;
 let currentPosition: { week: number; day: number } | null = null;
 let playbackSettings: PlaybackSettings = {
@@ -59,7 +60,14 @@ async function fetchContributions() {
     loading = true;
     errorMessage = '';
     console.log('Fetching contributions for:', username);
-    const response = await fetch(`${fnUrl}contributions?username=${encodeURIComponent(username)}`);
+    
+    // Construct the URL with the year parameter if it's not the default
+    let url = `${fnUrl}contributions?username=${encodeURIComponent(username)}`;
+    if (selectedYear !== 'lastYear') {
+      url += `&year=${selectedYear}`;
+    }
+    
+    const response = await fetch(url);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch contributions: ${response.status} ${response.statusText}`);
@@ -69,6 +77,7 @@ async function fetchContributions() {
     
     try {
       contributionData = JSON.parse(jsonText);
+      // Don't reset the selectedYear here to preserve the year from URL params
       
       currentPosition = null;
       stopPlayback();
@@ -126,7 +135,7 @@ async function togglePlay() {
 }
 
 function startPlayback() {
-  if (!contributionData) return;
+  if (!contributionData || !contributionData[selectedYear]) return;
   isPlaying = true;
   visualizerMode = true;
   currentPosition = { week: 0, day: 0 };
@@ -141,16 +150,16 @@ function stopPlayback() {
 }
 
 function playWeek(week: number) {
-  if (!isPlaying || !contributionData) return;
+  if (!isPlaying || !contributionData || !contributionData[selectedYear]) return;
 
   currentPosition = { week, day: 0 };
   
   audioEngine.playContributionWeek(
     week,
-    contributionData,
+    contributionData[selectedYear],
     playbackSettings,
     () => {
-      if (isPlaying && contributionData && week < contributionData.weeks.length - 1) {
+      if (isPlaying && contributionData && contributionData[selectedYear] && week < contributionData[selectedYear].weeks.length - 1) {
         playWeek(week + 1);
       } else {
         stopPlayback();
@@ -194,6 +203,11 @@ function generateShareLink(): string {
   // Add username
   params.set('user', username);
   
+  // Add selected year if it's not the default
+  if (selectedYear !== 'lastYear') {
+    params.set('year', selectedYear);
+  }
+  
   // Add playback settings
   params.set('speed', playbackSettings.speed.toString());
   params.set('harmony', playbackSettings.harmony.enabled ? '1' : '0');
@@ -235,6 +249,12 @@ onMount(() => {
   
   if (userParam) {
     username = userParam;
+    
+    // Parse year from URL if available
+    const yearParam = params.get('year');
+    if (yearParam) {
+      selectedYear = yearParam;
+    }
     
     // Parse playback settings from URL if available
     const speedParam = params.get('speed');
@@ -409,7 +429,13 @@ onMount(() => {
             {contributionData} 
             {currentPosition} 
             {theme} 
-            {isPlaying} 
+            {isPlaying}
+            {selectedYear}
+            onYearChange={(year) => {
+              selectedYear = year;
+              stopPlayback();
+              currentPosition = null;
+            }}
           />
         </div>
         

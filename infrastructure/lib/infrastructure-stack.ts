@@ -31,7 +31,7 @@ export class InfrastructureStack extends Stack {
       functionName: 'contribution-tune-fetcher',
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'handler',
-      memorySize: 512,
+      memorySize: 1024,
       entry: path.join(
         __dirname,
         `${backendFnsPath}/contributionFetcher/index.ts`

@@ -89,7 +89,6 @@ class AudioEngine {
     onComplete: () => void
   ) {
     try {
-      // Reset the last harmony index when starting from week 0
       if (week === 0) {
         this.lastHarmonyIndex = -1;
       }
@@ -102,7 +101,6 @@ class AudioEngine {
         return;
       }
       
-      // Ensure Tone.js is started (required for user interaction)
       if (Tone.getContext().state !== 'running') {
         try {
           console.log('Starting Tone.js context');
@@ -123,16 +121,13 @@ class AudioEngine {
       const notesToPlay: string[] = [];
       const isHarmonizedMode = settings.harmony.enabled;
       
-      // If in harmonized mode, we need to get the current harmony and its associated scale
       if (isHarmonizedMode) {
         const harmony = getHarmonyByName(settings.harmony.name);
-        const FIXED_INTERVAL = 8; // Fixed 8-week interval for harmony changes
+        const FIXED_INTERVAL = 8;
         
-        // Calculate which chord in the progression to use based on weekIndex and fixed interval
         const currentHarmonyIndex = Math.floor(week / FIXED_INTERVAL) % harmony.chords.length;
         const chord = harmony.chords[currentHarmonyIndex];
         
-        // Only play the chord if it has changed or it's the first one
         if (currentHarmonyIndex !== this.lastHarmonyIndex) {
           chord.notes.forEach(note => {
             notesToPlay.push(note);
@@ -143,7 +138,6 @@ class AudioEngine {
           console.log(`Playing harmony chord for week ${week}: ${chord.notes.join(', ')} (chord ${currentHarmonyIndex + 1} of ${harmony.chords.length})`);
         }
         
-        // Use the scale associated with this chord if available
         if (chord.scale && chord.scale.length > 0) {
           activeScale = {
             name: settings.scale.name,
@@ -152,21 +146,17 @@ class AudioEngine {
         }
       }
       
-      // Handle contributions (always play if they exist)
-      const hasContributions = weekData.days.some(day => day.count > 0);
+      const hasContributions = weekData.days.some(day => day.level > 0);
       if (hasContributions) {
-        // Map contribution days to notes
         weekData.days.forEach((day, dayIndex) => {
-          if (day.count > 0) {
-            // Map day index to a note in the active scale
+          if (day.level > 0) {
             const noteSet = activeScale.notes[dayIndex % activeScale.notes.length];
             
-            // Select note based on contribution count
-            let noteIndex = 0; // Default to first note (1-2 contributions)
-            if (day.count >= 7) {
-              noteIndex = 2; // Third note for 7+ contributions
-            } else if (day.count >= 3) {
-              noteIndex = 1; // Second note for 3-6 contributions
+            let noteIndex = 0;
+            if (day.level >= 3) {
+              noteIndex = 2;
+            } else if (day.level >= 2) {
+              noteIndex = 1;
             }
             
             const note = noteSet[noteIndex];
@@ -210,7 +200,6 @@ class AudioEngine {
   
   public stopSound() {
     if (this.sampler && this.activeNotes.length > 0) {
-      // Release all active notes with a gentle release
       this.activeNotes.forEach(note => {
         this.sampler?.triggerRelease(note);
       });

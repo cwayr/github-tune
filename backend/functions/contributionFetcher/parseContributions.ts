@@ -3,7 +3,7 @@ import { handleError } from '../../lib/errors';
 
 export interface Contribution {
   date: string;
-  count: number;
+  level: number;
 }
 
 export interface ContributionWeek {
@@ -14,22 +14,14 @@ export interface ContributionYear {
   weeks: ContributionWeek[];
 }
 
-const levelToCount = (level: string): number => {
-  switch (level) {
-    case '0': return 0;
-    case '1': return 2;
-    case '2': return 5;
-    case '3': return 8;
-    case '4': return 12;
-    default: return 0;
-  }
+const parseLevel = (level: string): number => {
+  // Convert the level string to a number (0-4) representing the actual contribution level
+  // Level 0 = no contributions, Level 4 = highest contribution count
+  return parseInt(level, 10) || 0;
 };
 
 export function parseContributions(html: string): ContributionYear {
   try {
-    console.log('in parse contributions');
-    console.log('html content:', html.substring(0, 200) + '...'); // Log first 200 chars of HTML
-
     let $;
     try {
       $ = cheerio.load(html);
@@ -38,13 +30,6 @@ export function parseContributions(html: string): ContributionYear {
       console.error('Failed to load HTML with cheerio:', error.message);
       throw new Error('Failed to parse HTML content');
     }
-
-    // Log all tables and their classes to help debug
-    const allTables = $('table');
-    console.log('Found tables:', allTables.length);
-    allTables.each((i, el) => {
-      console.log(`Table ${i} classes:`, $(el).attr('class'));
-    });
 
     const table = $('table.ContributionCalendar-grid');
     console.log('Contribution table found:', {
@@ -61,7 +46,6 @@ export function parseContributions(html: string): ContributionYear {
       throw new Error('Contribution table not found in HTML');
     }
 
-    // First check if tbody exists
     const tbody = table.find('tbody');
   if (!tbody.length) {
     console.error('No tbody found in table');
@@ -102,11 +86,10 @@ export function parseContributions(html: string): ContributionYear {
         }
 
         const date = dayCell.attr('data-date');
-        const level = dayCell.attr('data-level') || '0';
         if (date) {
-          const count = levelToCount(level);
-          week.push({ date, count });
-          console.log('Processed contribution:', { date, level, count });
+          const level = parseLevel(dayCell.attr('data-level') || '0');
+          week.push({ date, level });
+          console.log('Processed contribution:', { date, level });
         } else {
           console.log('No date found for cell:', { weekIndex, dayIndex, html: dayCell.html() });
         }

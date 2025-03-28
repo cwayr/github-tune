@@ -1,10 +1,12 @@
 <script lang="ts">
-import type { ContributionYear } from '../config/types';
+import type { AllContributions, ContributionYear } from '../config/types';
 
-export let contributionData: ContributionYear | null = null;
+export let contributionData: AllContributions | null = null;
 export let currentPosition: { week: number; day: number } | null = null;
 export let theme: 'light' | 'dark' | 'custom' = 'light';
 export let isPlaying: boolean = false;
+export let selectedYear: string = 'lastYear';
+export let onYearChange: (year: string) => void;
 
 let weeksContainer: HTMLDivElement;
 let currentMonth: string = '';
@@ -33,7 +35,7 @@ function scrollToBeginning() {
   }
 }
 
-$: if (currentPosition && weeksContainer && contributionData) {
+$: if (currentPosition && weeksContainer && contributionData && contributionData[selectedYear]) {
   const weekElements = weeksContainer.querySelectorAll('.week');
   if (weekElements.length > 0 && currentPosition.week < weekElements.length) {
     const activeWeekElement = weekElements[currentPosition.week];
@@ -45,8 +47,9 @@ $: if (currentPosition && weeksContainer && contributionData) {
         behavior: 'smooth'
       });
       
-      if (contributionData.weeks[currentPosition.week]?.days[0]) {
-        const firstDayDate = new Date(contributionData.weeks[currentPosition.week].days[0].date);
+      const currentYearData = contributionData[selectedYear];
+      if (currentYearData.weeks[currentPosition.week]?.days[0]) {
+        const firstDayDate = new Date(currentYearData.weeks[currentPosition.week].days[0].date);
         const monthName = firstDayDate.toLocaleString('en-US', { month: 'long' });
         currentMonth = monthName;
       }
@@ -54,18 +57,18 @@ $: if (currentPosition && weeksContainer && contributionData) {
   }
 }
 
-function getContributionColor(count: number): string {
+function getContributionColor(level: number): string {
   if (theme === 'dark') {
-    if (count === 0) return '#161b22';
-    else if (count <= 3) return '#0e4429';
-    else if (count <= 6) return '#006d32';
-    else if (count <= 9) return '#26a641';
+    if (level === 0) return '#161b22';
+    else if (level === 1) return '#0e4429';
+    else if (level === 2) return '#006d32';
+    else if (level === 3) return '#26a641';
     else return '#39d353';
   } else {
-    if (count === 0) return '#ebedf0';
-    else if (count <= 3) return '#9be9a8';
-    else if (count <= 6) return '#40c463';
-    else if (count <= 9) return '#30a14e';
+    if (level === 0) return '#ebedf0';
+    else if (level === 1) return '#9be9a8';
+    else if (level === 2) return '#40c463';
+    else if (level === 3) return '#30a14e';
     else return '#216e39';
   }
 }
@@ -101,13 +104,33 @@ function isCurrentDay(weekIndex: number, dayIndex: number): boolean {
         <span class="legend-label">Less</span>
         <div class="legend-colors">
           <div class="legend-color" style="background-color: {getContributionColor(0)}"></div>
+          <div class="legend-color" style="background-color: {getContributionColor(1)}"></div>
           <div class="legend-color" style="background-color: {getContributionColor(2)}"></div>
-          <div class="legend-color" style="background-color: {getContributionColor(5)}"></div>
-          <div class="legend-color" style="background-color: {getContributionColor(8)}"></div>
-          <div class="legend-color" style="background-color: {getContributionColor(12)}"></div>
+          <div class="legend-color" style="background-color: {getContributionColor(3)}"></div>
+          <div class="legend-color" style="background-color: {getContributionColor(4)}"></div>
         </div>
         <span class="legend-label">More</span>
       </div>
+    </div>
+
+    <div class="year-selector-container">
+      {#if contributionData}
+        <div class="year-selector">
+          <div class="select-container">
+            <select 
+              bind:value={selectedYear} 
+              on:change={() => onYearChange(selectedYear)}
+              class="year-select"
+            >
+            <option value="lastYear">Last Year</option>
+            {#each Object.keys(contributionData).filter(key => key !== 'lastYear').sort((a, b) => parseInt(b) - parseInt(a)) as year}
+              <option value={year}>{year}</option>
+            {/each}
+            </select>
+            <span class="select-arrow">▼</span>
+          </div>
+        </div>
+      {/if}
     </div>
 
     <div class="month-container">
@@ -127,26 +150,23 @@ function isCurrentDay(weekIndex: number, dayIndex: number): boolean {
       </div>
 
       <div class="weeks-container" bind:this={weeksContainer}>
-        {#each contributionData.weeks as week, weekIndex}
-          <div class="week {isActiveWeek(weekIndex) ? 'active-week-container' : ''}">
-            {#each week.days as day, dayIndex}
+        {#if contributionData && contributionData[selectedYear]}
+          {#each contributionData[selectedYear].weeks as week, weekIndex}
+            <div class="week {isActiveWeek(weekIndex) ? 'active-week-container' : ''}">
+              {#each week.days as day, dayIndex}
               <div
                 class="day-cell {isActiveWeek(weekIndex) ? 'active-week' : ''} 
-                       {isActiveWeek(weekIndex) && day.count > 0 ? 'contribution-flash' : ''}
+                       {isActiveWeek(weekIndex) && day.level > 0 ? 'contribution-flash' : ''}
                        {isCurrentDay(weekIndex, dayIndex) ? 'current-day' : ''}
-                       {isActiveWeek(weekIndex) && day.count === 0 ? 'progress-day' : ''}"
-                style="background-color: {getContributionColor(day.count)};"
-                data-count={day.count}
+                       {isActiveWeek(weekIndex) && day.level === 0 ? 'progress-day' : ''}"
+                style="background-color: {getContributionColor(day.level)};"
+                data-level={day.level}
                 data-date={day.date}
-              >
-                <div class="tooltip">
-                  <strong>{day.count} contribution{day.count !== 1 ? 's' : ''}</strong>
-                  <span>{day.date}</span>
-                </div>
-              </div>
-            {/each}
-          </div>
-        {/each}
+              ></div>
+              {/each}
+            </div>
+          {/each}
+        {/if}
       </div>
     </div>
   {/if}
@@ -171,8 +191,56 @@ function isCurrentDay(weekIndex: number, dayIndex: number): boolean {
   
   .title-section {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 1rem;
+  }
+  
+  .year-selector-container {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 1.50rem;
+    margin-top: 1rem;
+    margin-bottom: -2rem;
+  }
+
+  .year-selector {
+    position: relative;
+    width: auto;
+  }
+  
+  .year-select {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.85rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-md);
+    appearance: none;
+    background-color: white;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    padding-right: 1.75rem;
+  }
+  
+  .year-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  }
+  
+  .select-arrow {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    font-size: 0.5rem;
+    color: var(--text-secondary);
+  }
+  
+  :global(body.dark-mode) .year-select {
+    background-color: var(--surface-dark);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--light);
   }
 
   .graph-title {
@@ -186,7 +254,7 @@ function isCurrentDay(weekIndex: number, dayIndex: number): boolean {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0.75rem 0;
+    margin: 0rem 0 0.75rem;
     padding: 0 1.25rem;
   }
 
@@ -312,43 +380,7 @@ function isCurrentDay(weekIndex: number, dayIndex: number): boolean {
     box-shadow: 0 0 0 1px var(--primary) !important;
   }
 
-  .day-cell .tooltip {
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    margin-bottom: 8px;
-    background-color: var(--surface-dark);
-    color: white;
-    padding: 0.5rem;
-    border-radius: var(--radius-sm);
-    font-size: 0.75rem;
-    white-space: nowrap;
-    box-shadow: var(--shadow-md);
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.2s ease, visibility 0.2s ease;
-    pointer-events: none;
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
-  }
 
-  .day-cell .tooltip::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 5px;
-    border-style: solid;
-    border-color: var(--surface-dark) transparent transparent transparent;
-  }
-
-  .day-cell:hover .tooltip {
-    opacity: 1;
-    visibility: visible;
-  }
 
   :global(body.dark-mode) .graph-header {
     border-color: rgba(255, 255, 255, 0.03);

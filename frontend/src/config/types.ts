@@ -1,6 +1,6 @@
 export interface Contribution {
   date: string;
-  count: number;
+  level: number;
 }
 
 export interface ContributionWeek {
@@ -9,7 +9,6 @@ export interface ContributionWeek {
 
 export interface ContributionYear {
   weeks: ContributionWeek[];
-  year: number;
 }
 
 export interface MusicScale {
@@ -30,9 +29,15 @@ export interface PlaybackSettings {
 
 export type Theme = 'light' | 'dark' | 'custom';
 
+export interface AllContributions {
+  lastYear: ContributionYear;
+  [year: string]: ContributionYear;
+}
+
 export interface AppState {
   username: string;
-  contributionData: ContributionYear | null;
+  contributionData: AllContributions | null;
+  selectedYear: string;
   isPlaying: boolean;
   playbackSettings: PlaybackSettings;
   currentPosition: { week: number; day: number } | null;

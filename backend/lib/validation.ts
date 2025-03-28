@@ -5,15 +5,15 @@ export function parseRequestParams(params: unknown): FetcherLambdaParams {
     throw new Error('Invalid request parameters');
   }
   
-  const { username } = params as FetcherLambdaParams;
+  const { username, year } = params as FetcherLambdaParams;
 
-  if (username === undefined) {
-    throw new Error(`Missing required parameters. Received: ${JSON.stringify(params)}`);
+  if (!username) {
+    throw new Error(`Missing required username parameter`);
+  }
+  
+  if (year && !/^\d{4}$/.test(year)) {
+    throw new Error('Year must be a 4-digit number');
   }
 
-  if (typeof username !== 'string') {
-    throw new Error('Username must be a string');
-  }
-
-  return { username };
+  return { username, year };
 }

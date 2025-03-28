@@ -96,7 +96,7 @@ export const harmonizedScales: Record<string, MusicScale> = {
       ['A4', 'B4', 'D5'],
       ['D5', 'G5', 'A5'],
       ['G5', 'A5', 'B5'],
-      ['B5', 'C6', 'D6'],
+      ['B5', 'D6', 'G6'],
       ['D6', 'G6', 'A6'],
     ]
   },
@@ -116,25 +116,13 @@ export const harmonizedScales: Record<string, MusicScale> = {
 
 // Collection of available harmony progressions
 export const harmonies: Record<string, Harmony> = {
-  positive: {
-    name: 'Positive',
-    chords: [
-      { notes: ['C2', 'E3'], scale: harmonizedScales.i.notes as ScaleOptions },
-      { notes: ['A1', 'C3'], scale: harmonizedScales.vi.notes as ScaleOptions },
-      { notes: ['E2', 'C3'], scale: harmonizedScales.i.notes as ScaleOptions },
-      { notes: ['F2', 'A3'], scale: harmonizedScales.iv.notes as ScaleOptions },
-      { notes: ['D2', 'F3'], scale: harmonizedScales.ii.notes as ScaleOptions },
-      { notes: ['G2', 'G3'], scale: harmonizedScales.v.notes as ScaleOptions },
-      { notes: ['C2', 'E3'], scale: harmonizedScales.i.notes as ScaleOptions }
-    ]
-  },
   dreamy: {
     name: 'Dreamy',
     chords: [
-      { notes: ['F2', 'A3'], scale: harmonizedScales.iv.notes as ScaleOptions },
-      { notes: ['C2', 'E3'], scale: harmonizedScales.i.notes as ScaleOptions },
-      { notes: ['G2', 'B3'], scale: harmonizedScales.v.notes as ScaleOptions },
-      { notes: ['A2', 'C4'], scale: harmonizedScales.vi.notes as ScaleOptions }
+      { notes: ['D2', 'F3'], scale: harmonizedScales.iv.notes as ScaleOptions },
+      { notes: ['G2', 'B3'], scale: harmonizedScales.i.notes as ScaleOptions },
+      { notes: ['C2', 'E3'], scale: harmonizedScales.v.notes as ScaleOptions },
+      { notes: ['F2', 'A3'], scale: harmonizedScales.vi.notes as ScaleOptions },
     ]
   },
   melancholy: {

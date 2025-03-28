@@ -45,7 +45,7 @@ let copiedTipTimer: ReturnType<typeof setTimeout> | null = null;
 
 const tipDuration = 6000;
 
-const fnUrl = import.meta.env.VITE_FN_URL || 'https://mbmavarqr6s4kqsvpv7g57zqca0gzhtp.lambda-url.us-east-1.on.aws/';
+const fnUrl = import.meta.env.VITE_FN_URL || 'https://fbtkl3zagxhvs5yk7yenkry7xi0sexiq.lambda-url.us-east-1.on.aws/';
 console.log('Frontend FN URL:', fnUrl);
 
 function handleSubmit() {
@@ -61,7 +61,6 @@ async function fetchContributions() {
     errorMessage = '';
     console.log('Fetching contributions for:', username);
     
-    // Construct the URL with the year parameter if it's not the default
     let url = `${fnUrl}contributions?username=${encodeURIComponent(username)}`;
     if (selectedYear !== 'lastYear') {
       url += `&year=${selectedYear}`;
@@ -77,7 +76,6 @@ async function fetchContributions() {
     
     try {
       contributionData = JSON.parse(jsonText);
-      // Don't reset the selectedYear here to preserve the year from URL params
       
       currentPosition = null;
       stopPlayback();
@@ -108,7 +106,6 @@ async function togglePlay() {
       
       if (!soundTipShown) {
         soundTipShown = true;
-        // Save to localStorage that sound tip has been shown
         try {
           localStorage.setItem('soundTipShown', 'true');
         } catch (e) {
@@ -194,6 +191,13 @@ function updateSettings(event: CustomEvent | { detail: any }) {
 function toggleTheme() {
   theme = theme === 'light' ? 'dark' : 'light';
   document.body.classList.toggle('dark-mode');
+  
+  // Save theme preference to local storage
+  try {
+    localStorage.setItem('theme', theme);
+  } catch (e) {
+    console.warn('Could not save theme preference to localStorage:', e);
+  }
 }
 
 function generateShareLink(): string {
@@ -235,12 +239,21 @@ async function copyShareLink() {
 }
 
 onMount(() => {
-  // Check localStorage for previously shown tips
+  // Check localStorage for previously shown tips and theme preference
   try {
     soundTipShown = localStorage.getItem('soundTipShown') === 'true';
     harmonyTipShown = localStorage.getItem('harmonyTipShown') === 'true';
+    
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark' || savedTheme === 'light') {
+      theme = savedTheme;
+      if (theme === 'dark') {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+    }
   } catch (e) {
-    // If localStorage is not available, continue without it
     console.warn('LocalStorage not available:', e);
   }
 
@@ -250,13 +263,11 @@ onMount(() => {
   if (userParam) {
     username = userParam;
     
-    // Parse year from URL if available
     const yearParam = params.get('year');
     if (yearParam) {
       selectedYear = yearParam;
     }
     
-    // Parse playback settings from URL if available
     const speedParam = params.get('speed');
     if (speedParam) {
       const speed = parseFloat(speedParam);
@@ -273,13 +284,11 @@ onMount(() => {
     const moodParam = params.get('mood');
     if (moodParam) {
       if (playbackSettings.harmony.enabled) {
-        // Set harmony mood if harmony is enabled
         const availableHarmonies = getAvailableHarmonies().map((h: { name: string }) => h.name.toLowerCase());
         if (availableHarmonies.includes(moodParam.toLowerCase())) {
           playbackSettings.harmony.name = moodParam.toLowerCase();
         }
       } else {
-        // Set scale if harmony is not enabled
         const availableScales = audioEngine.getAvailableScales(false);
         const scale = availableScales.find(s => s.name.toLowerCase() === moodParam.toLowerCase());
         if (scale) {
@@ -292,7 +301,6 @@ onMount(() => {
     showIntro = false;
   }
   
-  // Only show sound tip if it hasn't been shown before
   setTimeout(() => {
     if (!isPlaying && !soundTipShown) {
       showSoundTip = true;

@@ -15,7 +15,7 @@ import type { AllContributions, PlaybackSettings } from '../config/types';
 
 let username = '';
 let contributionData: AllContributions | null = null;
-let selectedYear = 'lastYear';
+let selectedYear = 'pastYear';
 let isPlaying = false;
 let currentPosition: { week: number; day: number } | null = null;
 let playbackSettings: PlaybackSettings = {
@@ -61,7 +61,7 @@ async function fetchContributions() {
     console.log('Fetching contributions for:', username);
     
     let url = `${fnUrl}contributions?username=${encodeURIComponent(username)}`;
-    if (selectedYear !== 'lastYear') {
+    if (selectedYear !== 'pastYear') {
       url += `&year=${selectedYear}`;
     }
     
@@ -207,7 +207,7 @@ function generateShareLink(): string {
   params.set('user', username);
   
   // Add selected year if it's not the default
-  if (selectedYear !== 'lastYear') {
+  if (selectedYear !== 'pastYear') {
     params.set('year', selectedYear);
   }
   

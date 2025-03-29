@@ -5,7 +5,7 @@ export let contributionData: AllContributions | null = null;
 export let currentPosition: { week: number; day: number } | null = null;
 export let theme: 'light' | 'dark' | 'custom' = 'light';
 export let isPlaying: boolean = false;
-export let selectedYear: string = 'lastYear';
+export let selectedYear: string = 'pastYear';
 export let onYearChange: (year: string) => void;
 
 let weeksContainer: HTMLDivElement;
@@ -122,8 +122,8 @@ function isCurrentDay(weekIndex: number, dayIndex: number): boolean {
               on:change={() => onYearChange(selectedYear)}
               class="year-select"
             >
-            <option value="lastYear">Last Year</option>
-            {#each Object.keys(contributionData).filter(key => key !== 'lastYear').sort((a, b) => parseInt(b) - parseInt(a)) as year}
+            <option value="pastYear">Past Year</option>
+            {#each Object.keys(contributionData).filter(key => key !== 'pastYear').sort((a, b) => parseInt(b) - parseInt(a)) as year}
               <option value={year}>{year}</option>
             {/each}
             </select>

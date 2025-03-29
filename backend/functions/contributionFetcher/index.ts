@@ -10,7 +10,7 @@ interface LambdaEvent {
 }
 
 interface AllContributions {
-  lastYear: ContributionYear;
+  pastYear: ContributionYear;
   [year: string]: ContributionYear;
 }
 
@@ -139,7 +139,7 @@ export async function handler(event: LambdaEvent) {
       throw new Error(`Could not parse contribution data for user ${username}`);
     }
     
-    allContributions.lastYear = currentYearContributions;
+    allContributions.pastYear = currentYearContributions;
     
     // Extract the year links from the HTML
     const yearLinks = extractYearLinks(initialHtml);

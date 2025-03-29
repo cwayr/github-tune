@@ -51,7 +51,6 @@ class AudioEngine {
           },
           baseUrl: '/piano_samples/',
           onload: () => {
-            console.log('Piano samples loaded');
             this.samplesLoaded = true;
             resolve();
           },

@@ -119,10 +119,10 @@ export const harmonies: Record<string, Harmony> = {
   dreamy: {
     name: 'Dreamy',
     chords: [
-      { notes: ['D2', 'F3'], scale: harmonizedScales.iv.notes as ScaleOptions },
-      { notes: ['G2', 'B3'], scale: harmonizedScales.i.notes as ScaleOptions },
-      { notes: ['C2', 'E3'], scale: harmonizedScales.v.notes as ScaleOptions },
-      { notes: ['F2', 'A3'], scale: harmonizedScales.vi.notes as ScaleOptions },
+      { notes: ['D2', 'F3'], scale: harmonizedScales.ii.notes as ScaleOptions },
+      { notes: ['G2', 'B3'], scale: harmonizedScales.v.notes as ScaleOptions },
+      { notes: ['C2', 'E3'], scale: harmonizedScales.i.notes as ScaleOptions },
+      { notes: ['F2', 'A3'], scale: harmonizedScales.iv.notes as ScaleOptions },
     ]
   },
   melancholy: {

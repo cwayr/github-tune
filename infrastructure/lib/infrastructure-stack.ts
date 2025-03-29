@@ -99,9 +99,7 @@ export class InfrastructureStack extends Stack {
         allowMethods: [apigwv2.CorsHttpMethod.GET],
         allowOrigins: [
           `https://${domainName}`,
-          `https://dev.${rootDomain}`,
           'http://localhost:5173',
-          'http://localhost:4173',
         ],
         maxAge: Duration.days(10),
       },

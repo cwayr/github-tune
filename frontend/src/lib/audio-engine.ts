@@ -7,6 +7,7 @@ class AudioEngine {
   private samplesLoaded = false;
   private activeNotes: string[] = [];
   private sampler: Tone.Sampler | null = null;
+  private reverb: Tone.Reverb | null = null;
   private initPromise: Promise<void> | null = null;
   private startTime: number | null = null;
   private lastHarmonyIndex: number = -1;
@@ -28,7 +29,7 @@ class AudioEngine {
           await Tone.start();
           console.log('Tone.js context started');
         }
-        
+
         this.sampler = new Tone.Sampler({
           urls: {
             C2: 'C2v3.ogg',
@@ -52,13 +53,26 @@ class AudioEngine {
           baseUrl: '/piano_samples/',
           onload: () => {
             this.samplesLoaded = true;
+            if (this.reverb) {
+              this.sampler?.connect(this.reverb);
+              console.log('Sampler connected to Reverb');
+            } else {
+              console.warn('Reverb not initialized, connecting sampler directly to destination');
+              this.sampler?.toDestination();
+            }
             resolve();
           },
+        });
+
+        this.reverb = new Tone.Reverb({
+          decay: 1.5,
+          wet: 0.5
         }).toDestination();
-        
+        console.log('Reverb created and connected to destination');
+
         this.isInitialized = true;
-        console.log('Tone.js audio engine initialized');
-        
+        console.log('Tone.js audio engine initialized setup for reverb');
+
         // If onload isn't called after 5 seconds, resolve anyway to prevent hanging
         setTimeout(() => {
           if (!this.samplesLoaded) {

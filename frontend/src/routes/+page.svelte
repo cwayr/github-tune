@@ -10,8 +10,7 @@ import Volume2 from '@lucide/svelte/icons/volume-2';
 import ContributionGraph from '../components/ContributionGraph.svelte';
 import PlaybackControls from '../components/PlaybackControls.svelte';
 import Tip from '../components/Tip.svelte';
-import { audioEngine } from '../lib/audio-engine';
-import { getAvailableHarmonies } from '../lib/harmonies';
+import { getAvailableHarmonies, audioEngine } from '$lib';
 import type { AllContributions, PlaybackSettings } from '../config/types';
 
 let username = '';

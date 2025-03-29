@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { PlaybackSettings, MusicScale } from '../config/types';
-  import { getAvailableHarmonies } from '../lib/harmonies';
-  import { audioEngine } from '../lib/audio-engine';
+  import { getAvailableHarmonies, audioEngine } from '$lib';
   import { createEventDispatcher } from 'svelte';
   
   const dispatch = createEventDispatcher();

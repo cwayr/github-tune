@@ -44,8 +44,8 @@ let copiedTipTimer: ReturnType<typeof setTimeout> | null = null;
 
 const tipDuration = 6000;
 
-const fnUrl = import.meta.env.VITE_FN_URL || 'https://fbtkl3zagxhvs5yk7yenkry7xi0sexiq.lambda-url.us-east-1.on.aws/';
-console.log('Frontend FN URL:', fnUrl);
+const apiUrl = import.meta.env.VITE_API_URL || 'https://fbtkl3zagxhvs5yk7yenkry7xi0sexiq.lambda-url.us-east-1.on.aws/';
+console.log('Frontend API URL:', apiUrl);
 
 function handleSubmit() {
   if (username) {
@@ -60,7 +60,7 @@ async function fetchContributions() {
     errorMessage = '';
     console.log('Fetching contributions for:', username);
     
-    let url = `${fnUrl}contributions?username=${encodeURIComponent(username)}`;
+    let url = `${apiUrl}contributions?username=${encodeURIComponent(username)}`;
     if (selectedYear !== 'pastYear') {
       url += `&year=${selectedYear}`;
     }

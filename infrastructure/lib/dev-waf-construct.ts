@@ -27,19 +27,18 @@ export class DevWafConstruct extends Construct {
       name: `${namingPrefix}-dev-access-acl`,
       rules: [
         {
-          name: 'AllowHeaderRule',
+          name: 'RateLimitRule',
           priority: 0,
-          action: { allow: {} },
+          action: { count: {} },
           statement: {
-            managedRuleGroupStatement: {
-              vendorName: "AWS",
-              name: "AWSManagedRulesCommonRuleSet",
-              excludedRules: [],
-            },
+            rateBasedStatement: {
+              limit: 100,
+              aggregateKeyType: 'IP'
+            }
           },
           visibilityConfig: {
             cloudWatchMetricsEnabled: true,
-            metricName: `${namingPrefix}-devHeaderRuleMetric`,
+            metricName: `${namingPrefix}-rateLimitMetric`,
             sampledRequestsEnabled: true,
           },
         },

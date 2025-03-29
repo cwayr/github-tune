@@ -6,6 +6,7 @@ import {
   aws_s3 as s3,
   RemovalPolicy,
   aws_logs as logs,
+  aws_wafv2 as wafv2,
   aws_lambda as lambda,
   aws_route53 as route53,
   aws_cloudfront as cloudfront,
@@ -14,6 +15,8 @@ import {
   aws_route53_targets as targets,
   aws_cloudfront_origins as origins,
   aws_lambda_nodejs as nodejs_lambda,
+  aws_apigatewayv2 as apigwv2,
+  aws_apigatewayv2_integrations as apigw_integrations,
 } from 'aws-cdk-lib';
 import * as path from 'path';
 import { Construct } from 'constructs';
@@ -89,13 +92,64 @@ export class InfrastructureStack extends Stack {
       logRetention: logs.RetentionDays.ONE_MONTH,
     });
 
-    const functionUrl = apiFunction.addFunctionUrl({
-      authType: lambda.FunctionUrlAuthType.NONE,
-      cors: {
-        allowedOrigins: ['*'],
-        allowedMethods: [lambda.HttpMethod.GET],
-        allowedHeaders: ['content-type'],
+    const httpApi = new apigwv2.HttpApi(this, `${namingPrefix}-httpApi-${environment}`, {
+      apiName: `${namingPrefix}-httpApi-${environment}`,
+      corsPreflight: {
+        allowHeaders: ['Content-Type'],
+        allowMethods: [apigwv2.CorsHttpMethod.GET],
+        allowOrigins: [
+          `https://${domainName}`,
+          `https://dev.${rootDomain}`,
+          'http://localhost:5173',
+          'http://localhost:4173',
+        ],
+        maxAge: Duration.days(10),
       },
+    });
+
+    const lambdaIntegration = new apigw_integrations.HttpLambdaIntegration(
+      `${namingPrefix}-lambdaIntegration-${environment}`,
+      apiFunction
+    );
+
+    httpApi.addRoutes({
+      path: '/{proxy+}',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: lambdaIntegration,
+    });
+
+    const regionalWaf = new wafv2.CfnWebACL(this, `${namingPrefix}-regionalWaf-${environment}`, {
+      defaultAction: { allow: {} }, // Default allow, block based on rules
+      scope: 'REGIONAL',
+      visibilityConfig: {
+        cloudWatchMetricsEnabled: true,
+        metricName: `${namingPrefix}-regionalWafMetric-${environment}`,
+        sampledRequestsEnabled: true, // Enable sampling for debugging
+      },
+      name: `${namingPrefix}-regional-waf-${environment}`,
+      rules: [
+        {
+          name: 'ApiRateLimitRule',
+          priority: 0,
+          action: { block: {} },
+          statement: {
+            rateBasedStatement: {
+              limit: 500, // 500 requests per 5 minutes per IP
+              aggregateKeyType: 'IP',
+            },
+          },
+          visibilityConfig: {
+            cloudWatchMetricsEnabled: true,
+            metricName: `${namingPrefix}-apiRateLimitMetric-${environment}`,
+            sampledRequestsEnabled: true,
+          },
+        },
+      ],
+    });
+
+    new wafv2.CfnWebACLAssociation(this, `${namingPrefix}-wafAssociation-${environment}`, {
+      resourceArn: `arn:aws:apigateway:${this.region}:${this.account}:/apis/${httpApi.httpApiId}/stages/$default`,
+      webAclArn: regionalWaf.attrArn,
     });
 
     const distribution = new cloudfront.Distribution(this, `${namingPrefix}-distribution-${environment}`, {
@@ -124,9 +178,11 @@ export class InfrastructureStack extends Stack {
       target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(distribution)),
     });
 
+    const apiUrl = httpApi.url ? httpApi.url.slice(0, -1) : ''; // Remove trailing slash if present
+    console.log('adding api url', apiUrl)
     const configFile = new s3deploy.BucketDeployment(this, `${namingPrefix}-configDeployment`, {
       sources: [
-        s3deploy.Source.data('config.js', `window.ENV = { VITE_FN_URL: "${functionUrl.url}" };`),
+        s3deploy.Source.data('config.js', `window.ENV = { VITE_API_URL: "${apiUrl}" };`),
       ],
       destinationBucket: websiteBucket,
     });
@@ -145,8 +201,8 @@ export class InfrastructureStack extends Stack {
       value: `https://${distribution.distributionDomainName}`,
     });
 
-    new CfnOutput(this, 'FetcherLambdaURL', {
-      value: functionUrl.url,
+    new CfnOutput(this, 'FetcherApiUrl', {
+      value: apiUrl,
     });
   }
 }

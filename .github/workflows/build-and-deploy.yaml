@@ -3,7 +3,7 @@ name: Build and Deploy
 on:
   push:
     branches:
-      - develop
+      - master
   workflow_dispatch:
   release:
     types: [published]
@@ -45,8 +45,11 @@ jobs:
         
       - name: Deploy infrastructure
         working-directory: ./infrastructure
+        env:
+          DEV_ACCESS_SECRET: ${{ secrets.DEV_ACCESS_SECRET }}
         run: |
           npx cdk deploy \
           --all \
           --require-approval never \
-          --context environment=${{ github.event_name == 'release' && 'prod' || 'dev' }}
+          --context environment=${{ github.event_name == 'release' && 'prod' || 'dev' }} \
+          ${{ github.event_name != 'release' && format('--context devAccessHeaderValue={0}', env.DEV_ACCESS_SECRET) || '' }}

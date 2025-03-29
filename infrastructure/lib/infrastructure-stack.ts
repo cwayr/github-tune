@@ -7,16 +7,17 @@ import {
   RemovalPolicy,
   aws_logs as logs,
   aws_lambda as lambda,
+  aws_route53 as route53,
   aws_cloudfront as cloudfront,
+  aws_certificatemanager as acm,
   aws_s3_deployment as s3deploy,
+  aws_route53_targets as targets,
   aws_cloudfront_origins as origins,
   aws_lambda_nodejs as nodejs_lambda,
 } from 'aws-cdk-lib';
-import * as route53 from 'aws-cdk-lib/aws-route53';
-import * as acm from 'aws-cdk-lib/aws-certificatemanager';
-import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import * as path from 'path';
 import { Construct } from 'constructs';
+import { DevWafConstruct } from './dev-waf-construct';
 
 export class InfrastructureStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -30,6 +31,30 @@ export class InfrastructureStack extends Stack {
     const environment = this.node.tryGetContext('environment') || 'dev';
     console.log(`Deploying to ${environment} environment`);
     const domainName = environment === 'prod' ? rootDomain : `${environment}.${rootDomain}`;
+
+    let devAccessHeaderValue: string | undefined = undefined;
+    if (environment === 'dev') {
+      devAccessHeaderValue = this.node.tryGetContext('devAccessHeaderValue');
+      if (!devAccessHeaderValue) {
+        throw new Error('Context variable "devAccessHeaderValue" must be provided for the "dev" environment.');
+      }
+    } else {
+      if (this.node.tryGetContext('devAccessHeaderValue')) {
+        console.warn('Context variable "devAccessHeaderValue" was provided for a non-dev environment and will be ignored.');
+      }
+    }
+
+    let devWaf: DevWafConstruct | undefined = undefined;
+    if (environment === 'dev') {
+      devWaf = new DevWafConstruct(this, 'DevWaf', {
+        namingPrefix: namingPrefix,
+        devAccessHeaderValue: devAccessHeaderValue!,
+      });
+    } else {
+      if (this.node.tryGetContext('devAccessHeaderValue')) {
+        console.warn('Context variable "devAccessHeaderValue" was provided for a non-dev environment and will be ignored.');
+      }
+    }
 
     const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
       domainName: rootDomain,
@@ -90,6 +115,7 @@ export class InfrastructureStack extends Stack {
       ],
       domainNames: [domainName],
       certificate: certificate,
+      webAclId: devWaf?.webAclArn,
     });
 
     new route53.ARecord(this, `AliasRecord-${environment}`, {

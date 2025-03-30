@@ -21,6 +21,8 @@ import * as path from 'path';
 import { Construct } from 'constructs';
 import { CloudFrontWafConstruct } from './cloudfront-waf-construct';
 
+const DEV_ACCESS_HEADER_NAME = 'X-Dev-Access';
+
 export class InfrastructureStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
@@ -122,6 +124,23 @@ export class InfrastructureStack extends Stack {
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
           originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
+          ...(environment === 'dev' && devAccessHeaderValue ? {
+            functionAssociations: [
+              {
+                function: new cloudfront.Function(this, `${namingPrefix}-api-origin-fn-${environment}`, {
+                  code: cloudfront.FunctionCode.fromInline(`
+                    function handler(event) {
+                      var request = event.request;
+                      request.headers['${DEV_ACCESS_HEADER_NAME}'] = {value: '${devAccessHeaderValue}'};
+                      return request;
+                    }
+                  `),
+                  functionName: `${namingPrefix}-api-origin-fn-${environment}`,
+                }),
+                eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+              },
+            ],
+          } : {}),
         },
       },
       defaultRootObject: 'index.html',
@@ -167,3 +186,4 @@ export class InfrastructureStack extends Stack {
     });
   }
 }
+

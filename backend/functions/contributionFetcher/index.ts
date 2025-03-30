@@ -118,7 +118,6 @@ export async function handler(event: LambdaEvent) {
     const { username } = parseRequestParams(event.queryStringParameters);
     const allContributions: AllContributions = {} as AllContributions;
     
-    // First fetch the main contributions page
     const mainUrl = `https://github.com/${encodeURIComponent(username)}?tab=contributions`;
     console.log(`Fetching main contributions page from: ${mainUrl}`);
     
@@ -132,7 +131,6 @@ export async function handler(event: LambdaEvent) {
     
     const initialHtml = await initialResponse.text();
     
-    // Extract and parse the current year's contributions
     const currentYearContributions = parseContributions(initialHtml);
     if (!currentYearContributions) {
       throw new Error(`Could not parse contribution data for user ${username}`);
@@ -140,7 +138,6 @@ export async function handler(event: LambdaEvent) {
     
     allContributions.pastYear = currentYearContributions;
     
-    // Extract the year links from the HTML
     const yearLinks = extractYearLinks(initialHtml);
     
     if (yearLinks.length === 0) {
@@ -157,15 +154,12 @@ export async function handler(event: LambdaEvent) {
       };
     }
     
-    // Find the current year link and add its data
     const currentYearLink = yearLinks[0]; // Assuming first link is current year (sorted newest first)
     allContributions[currentYearLink.year.toString()] = currentYearContributions;
     console.log(`Added current year ${currentYearLink.year} contributions`);
     
-    // Remove the current year from links to fetch (we already have it)
     const yearLinksToFetch = yearLinks.slice(1); // Skip the first (current year) link
     
-    // cess thethe remaining rs in batches to
     let batchResults: YearFetchResult[] = [];
     for (let i = 0; i < yearLinksToFetch.length; i += MAX_CONCURRENT_REQUESTS) {
       const batchLinks = yearLinksToFetch.slice(i, i + MAX_CONCURRENT_REQUESTS);
@@ -174,13 +168,11 @@ export async function handler(event: LambdaEvent) {
       const results = await processBatch(batchLinks);
       batchResults = [...batchResults, ...results];
       
-      // Small delay between batches to avoid rate limiting
       if (i + MAX_CONCURRENT_REQUESTS < yearLinksToFetch.length) {
         await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY_MS));
       }
     }
     
-    // Process results and add to output
     for (const result of batchResults) {
       if (result.contributions) {
         const hasNonZeroContributions = result.contributions.weeks.some(week => 

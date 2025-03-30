@@ -19,7 +19,7 @@ import {
 } from 'aws-cdk-lib';
 import * as path from 'path';
 import { Construct } from 'constructs';
-import { CloudFrontWafConstruct } from './cloudfront-waf-construct';
+// import { CloudFrontWafConstruct } from './cloudfront-waf-construct';
 
 const DEV_ACCESS_HEADER_NAME = 'x-dev-access';
 
@@ -46,12 +46,12 @@ export class InfrastructureStack extends Stack {
       console.warn('Context variable "devAccessHeaderValue" was provided for a non-dev environment and will be ignored.');
     }
 
-    const cloudFrontWaf = new CloudFrontWafConstruct(this, 'CloudFrontWaf', {
-      namingPrefix,
-      environment,
-      devAccessHeaderValue: environment === 'dev' ? devAccessHeaderValue : undefined,
-      allowApiRequests: true, // Allow API requests to bypass the dev header check
-    });
+    // const cloudFrontWaf = new CloudFrontWafConstruct(this, 'CloudFrontWaf', {
+    //   namingPrefix,
+    //   environment,
+    //   devAccessHeaderValue: environment === 'dev' ? devAccessHeaderValue : undefined,
+    //   allowApiRequests: true, // Allow API requests to bypass the dev header check
+    // });
 
     const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
       domainName: rootDomain,
@@ -118,15 +118,36 @@ export class InfrastructureStack extends Stack {
         }),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
-      additionalBehaviors: environment === 'prod' ? {
+      additionalBehaviors: {
         '/api/*': {
           origin: apiOrigin,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER
-        }
-      } : {},
+          originRequestPolicy: new cloudfront.OriginRequestPolicy(this, `${namingPrefix}-api-orgreq-policy-${environment}`, {
+            headerBehavior: cloudfront.OriginRequestHeaderBehavior.all(),
+            queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
+            cookieBehavior: cloudfront.OriginRequestCookieBehavior.none()
+          }),
+          // ...(environment === 'dev' && devAccessHeaderValue ? {
+          //   functionAssociations: [
+          //     {
+          //       function: new cloudfront.Function(this, `${namingPrefix}-api-origin-fn-${environment}`, {
+          //         code: cloudfront.FunctionCode.fromInline(`
+          //           function handler(event) {
+          //             var request = event.request;
+          //             request.headers['${DEV_ACCESS_HEADER_NAME}'] = {value: "${devAccessHeaderValue}"};
+          //             return request;
+          //           }
+          //         `),
+          //         functionName: `${namingPrefix}-api-origin-fn-${environment}`,
+          //       }),
+          //       eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+          //     },
+          //   ],
+          // } : {}),
+        },
+      },
       defaultRootObject: 'index.html',
       errorResponses: [
         {
@@ -137,7 +158,7 @@ export class InfrastructureStack extends Stack {
       ],
       domainNames: [domainName],
       certificate,
-      webAclId: cloudFrontWaf.webAclArn,
+      // webAclId: cloudFrontWaf.webAclArn,
     });
 
     new route53.ARecord(this, `AliasRecord-${environment}`, {
@@ -146,12 +167,10 @@ export class InfrastructureStack extends Stack {
       target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(distribution)),
     });
 
-    // Only create this config if we're not in dev environment
-    // For dev, we'll create a different config that points to the separate API domain
-    const configFile = environment !== 'dev' ? new s3deploy.BucketDeployment(this, `${namingPrefix}-configDeployment`, {
+    const configFile = new s3deploy.BucketDeployment(this, `${namingPrefix}-configDeployment`, {
       sources: [s3deploy.Source.data('config.js', `window.ENV = { VITE_API_URL: "/api" };`)],
       destinationBucket: websiteBucket,
-    }) : undefined;
+    });
 
     const websiteDeployment = new s3deploy.BucketDeployment(this, `${namingPrefix}-websiteDeployment`, {
       sources: [s3deploy.Source.asset(path.join(__dirname, frontendBuildPath))],
@@ -161,57 +180,15 @@ export class InfrastructureStack extends Stack {
       prune: false,
     });
 
-    // Only add the dependency if configFile is defined
-    if (configFile) {
-      websiteDeployment.node.addDependency(configFile);
-    }
+    websiteDeployment.node.addDependency(configFile);
 
     new CfnOutput(this, 'SiteURL', {
       value: `https://${distribution.distributionDomainName}`,
     });
 
-    // Create a separate distribution just for API calls without WAF protection
-    if (environment === 'dev') {
-      const apiDistribution = new cloudfront.Distribution(this, `${namingPrefix}-api-distribution-${environment}`, {
-        defaultBehavior: {
-          origin: apiOrigin,
-          allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-          originRequestPolicy: new cloudfront.OriginRequestPolicy(this, `${namingPrefix}-api-origin-policy-${environment}`, {
-            headerBehavior: cloudfront.OriginRequestHeaderBehavior.all(),
-            queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
-            cookieBehavior: cloudfront.OriginRequestCookieBehavior.none()
-          }),
-        },
-        comment: 'API Distribution with no WAF',
-        domainNames: [`api.${environment}.${rootDomain}`],
-        certificate,
-        // No WAF for this distribution
-      });
-      
-      new route53.ARecord(this, `ApiAliasRecord-${environment}`, {
-        zone: hostedZone,
-        recordName: `api.${environment}.${rootDomain}`,
-        target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(apiDistribution)),
-      });
-      
-      // Update the frontend config to use the separate API domain - this replaces the earlier config.js
-      const configFile = new s3deploy.BucketDeployment(this, `${namingPrefix}-configDeployment`, {
-        sources: [s3deploy.Source.data('config.js', `window.ENV = { VITE_API_URL: "https://api.${environment}.${rootDomain}" };`)],
-        destinationBucket: websiteBucket,
-      });
-      
-      new CfnOutput(this, 'ApiDistributionUrl', {
-        value: `https://api.${environment}.${rootDomain}`,
-        description: 'URL for API endpoints (no WAF protection)',
-      });
-    }
-    
     new CfnOutput(this, 'FetcherApiUrl', {
-      value: environment === 'dev' 
-        ? `https://api.${environment}.${rootDomain}` 
-        : `https://${domainName}/api`,
+      value: `https://${domainName}/api`,
     });
   }
 }
+

@@ -44,7 +44,7 @@ export class CloudFrontWafConstruct extends Construct {
       
       rules.push({
         name: 'DevAccessHeaderRule',
-        priority: 1,
+        priority: 2,
         action: { allow: {} },
         statement: {
           byteMatchStatement: {
@@ -66,7 +66,7 @@ export class CloudFrontWafConstruct extends Construct {
       if (props.allowApiRequests) {
         rules.push({
           name: 'AllowApiRequestsRule',
-          priority: 0, // Higher priority than DevAccessHeaderRule
+          priority: 1,
           action: { allow: {} },
           statement: {
             byteMatchStatement: {
@@ -81,8 +81,8 @@ export class CloudFrontWafConstruct extends Construct {
           visibilityConfig: {
             cloudWatchMetricsEnabled: true,
             metricName: `${namingPrefix}-allowApiMetric`,
-            sampledRequestsEnabled: true,
-          },
+            sampledRequestsEnabled: true
+          }
         });
       }
     }

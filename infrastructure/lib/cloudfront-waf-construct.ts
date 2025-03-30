@@ -37,6 +37,30 @@ export class CloudFrontWafConstruct extends Construct {
       },
     ];
 
+    // Always add a rule to exempt API Gateway requests (highest priority)
+    if (environment === 'dev') {
+      rules.unshift({
+        name: 'ExemptApiRequests',
+        priority: 1,
+        action: { allow: {} },
+        statement: {
+          byteMatchStatement: {
+            searchString: '/api/',
+            fieldToMatch: {
+              uriPath: {}
+            },
+            textTransformations: [{ priority: 0, type: 'NONE' }],
+            positionalConstraint: 'STARTS_WITH'
+          }
+        },
+        visibilityConfig: {
+          cloudWatchMetricsEnabled: true,
+          metricName: `${namingPrefix}-exemptApiMetric-${environment}`,
+          sampledRequestsEnabled: true
+        }
+      });
+    }
+
     if (environment === 'dev') {
       if (!devAccessHeaderValue) {
         throw new Error('devAccessHeaderValue is required for dev environment');
@@ -62,29 +86,6 @@ export class CloudFrontWafConstruct extends Construct {
           sampledRequestsEnabled: true,
         },
       });
-      
-      if (props.allowApiRequests) {
-        rules.push({
-          name: 'AllowApiRequestsRule',
-          priority: 1,
-          action: { allow: {} },
-          statement: {
-            byteMatchStatement: {
-              searchString: '/api/',
-              fieldToMatch: {
-                uriPath: {},
-              },
-              textTransformations: [{ priority: 0, type: 'NONE' }],
-              positionalConstraint: 'STARTS_WITH',
-            },
-          },
-          visibilityConfig: {
-            cloudWatchMetricsEnabled: true,
-            metricName: `${namingPrefix}-allowApiMetric`,
-            sampledRequestsEnabled: true
-          }
-        });
-      }
     }
 
     const defaultAction = environment === 'dev' ? { block: {} } : { allow: {} };

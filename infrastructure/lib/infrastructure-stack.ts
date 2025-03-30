@@ -89,7 +89,7 @@ export class InfrastructureStack extends Stack {
     const httpApi = new apigwv2.HttpApi(this, `${namingPrefix}-httpApi-${environment}`, {
       apiName: `${namingPrefix}-httpApi-${environment}`,
       corsPreflight: {
-        allowHeaders: ['Content-Type'],
+        allowHeaders: ['Content-Type', DEV_ACCESS_HEADER_NAME], // Add DEV_ACCESS_HEADER to CORS allowed headers
         allowMethods: [apigwv2.CorsHttpMethod.GET],
         allowOrigins: [`https://${domainName}`, 'http://localhost:5173'],
         maxAge: Duration.days(10),
@@ -124,7 +124,13 @@ export class InfrastructureStack extends Stack {
           allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
+          // Use a custom policy that includes all headers - critical for passing the dev access header
+          originRequestPolicy: new cloudfront.OriginRequestPolicy(this, `${namingPrefix}-api-orgreq-policy-${environment}`, {
+            headerBehavior: cloudfront.OriginRequestHeaderBehavior.all(), // Forward ALL headers to origin
+            queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
+            cookieBehavior: cloudfront.OriginRequestCookieBehavior.none()
+          }),
+          // Function to add the header
           ...(environment === 'dev' && devAccessHeaderValue ? {
             functionAssociations: [
               {

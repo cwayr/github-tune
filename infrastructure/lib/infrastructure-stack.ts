@@ -146,7 +146,7 @@ export class InfrastructureStack extends Stack {
     });
 
     new wafv2.CfnWebACLAssociation(this, `${namingPrefix}-wafAssociation-${environment}`, {
-      resourceArn: `arn:aws:apigateway:${this.region}:${this.account}:apis/${httpApi.httpApiId}/stages/$default`,
+      resourceArn: `arn:aws:apigateway:${this.region}::/apis/${httpApi.httpApiId}/stages/$default`,
       webAclArn: regionalWaf.attrArn,
     });
 

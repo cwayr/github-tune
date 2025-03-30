@@ -146,10 +146,12 @@ export class InfrastructureStack extends Stack {
       target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(distribution)),
     });
 
-    const configFile = new s3deploy.BucketDeployment(this, `${namingPrefix}-configDeployment`, {
+    // Only create this config if we're not in dev environment
+    // For dev, we'll create a different config that points to the separate API domain
+    const configFile = environment !== 'dev' ? new s3deploy.BucketDeployment(this, `${namingPrefix}-configDeployment`, {
       sources: [s3deploy.Source.data('config.js', `window.ENV = { VITE_API_URL: "/api" };`)],
       destinationBucket: websiteBucket,
-    });
+    }) : undefined;
 
     const websiteDeployment = new s3deploy.BucketDeployment(this, `${namingPrefix}-websiteDeployment`, {
       sources: [s3deploy.Source.asset(path.join(__dirname, frontendBuildPath))],
@@ -159,7 +161,10 @@ export class InfrastructureStack extends Stack {
       prune: false,
     });
 
-    websiteDeployment.node.addDependency(configFile);
+    // Only add the dependency if configFile is defined
+    if (configFile) {
+      websiteDeployment.node.addDependency(configFile);
+    }
 
     new CfnOutput(this, 'SiteURL', {
       value: `https://${distribution.distributionDomainName}`,
@@ -191,14 +196,11 @@ export class InfrastructureStack extends Stack {
         target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(apiDistribution)),
       });
       
-      // Update the frontend config to use the separate API domain
-      const configFileSeparateApi = new s3deploy.BucketDeployment(this, `${namingPrefix}-configDeploymentSeparateApi`, {
+      // Update the frontend config to use the separate API domain - this replaces the earlier config.js
+      const configFile = new s3deploy.BucketDeployment(this, `${namingPrefix}-configDeployment`, {
         sources: [s3deploy.Source.data('config.js', `window.ENV = { VITE_API_URL: "https://api.${environment}.${rootDomain}" };`)],
         destinationBucket: websiteBucket,
       });
-      
-      websiteDeployment.node.addDependency(configFileSeparateApi);
-      configFile.node.addDependency(configFileSeparateApi);
       
       new CfnOutput(this, 'ApiDistributionUrl', {
         value: `https://api.${environment}.${rootDomain}`,
@@ -213,4 +215,3 @@ export class InfrastructureStack extends Stack {
     });
   }
 }
-

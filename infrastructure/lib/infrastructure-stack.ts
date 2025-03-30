@@ -131,7 +131,7 @@ export class InfrastructureStack extends Stack {
                   code: cloudfront.FunctionCode.fromInline(`
                     function handler(event) {
                       var request = event.request;
-                      request.headers['${DEV_ACCESS_HEADER_NAME}'] = {value: '${devAccessHeaderValue}'};
+                      request.headers['${DEV_ACCESS_HEADER_NAME}'] = {value: "${devAccessHeaderValue}"};
                       return request;
                     }
                   `),

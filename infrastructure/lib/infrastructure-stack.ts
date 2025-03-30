@@ -9,13 +9,13 @@ import {
   aws_wafv2 as wafv2,
   aws_lambda as lambda,
   aws_route53 as route53,
+  aws_apigatewayv2 as apigwv2,
   aws_cloudfront as cloudfront,
   aws_certificatemanager as acm,
   aws_s3_deployment as s3deploy,
   aws_route53_targets as targets,
   aws_cloudfront_origins as origins,
   aws_lambda_nodejs as nodejs_lambda,
-  aws_apigatewayv2 as apigwv2,
   aws_apigatewayv2_integrations as apigw_integrations,
 } from 'aws-cdk-lib';
 import * as path from 'path';
@@ -82,14 +82,14 @@ export class InfrastructureStack extends Stack {
       handler: 'handler',
       memorySize: 1024,
       entry: path.join(__dirname, `${backendFnsPath}/contributionFetcher/index.ts`),
-      timeout: Duration.seconds(15),
+      timeout: Duration.seconds(30),
       bundling: {
         minify: true,
         sourceMap: true,
         externalModules: [],
         nodeModules: ['cheerio'],
       },
-      logRetention: logs.RetentionDays.ONE_MONTH,
+      logRetention: logs.RetentionDays.TWO_WEEKS,
     });
 
     const httpApi = new apigwv2.HttpApi(this, `${namingPrefix}-httpApi-${environment}`, {
@@ -146,7 +146,7 @@ export class InfrastructureStack extends Stack {
     });
 
     new wafv2.CfnWebACLAssociation(this, `${namingPrefix}-wafAssociation-${environment}`, {
-      resourceArn: `arn:aws:apigateway:${this.region}:${this.account}:/apis/${httpApi.httpApiId}/stages/$default`,
+      resourceArn: `arn:aws:apigateway:${this.region}:${this.account}:apis/${httpApi.httpApiId}/stages/$default`,
       webAclArn: regionalWaf.attrArn,
     });
 

@@ -44,8 +44,7 @@ let copiedTipTimer: ReturnType<typeof setTimeout> | null = null;
 
 const tipDuration = 6000;
 
-const apiUrl = import.meta.env.VITE_API_URL || 'https://fbtkl3zagxhvs5yk7yenkry7xi0sexiq.lambda-url.us-east-1.on.aws/';
-console.log('Frontend API URL:', apiUrl);
+const apiUrl = import.meta.env.VITE_API_URL || '/api';
 
 function handleSubmit() {
   if (username) {
@@ -58,7 +57,6 @@ async function fetchContributions() {
   try {
     loading = true;
     errorMessage = '';
-    console.log('Fetching contributions for:', username);
     
     let url = `${apiUrl}contributions?username=${encodeURIComponent(username)}`;
     if (selectedYear !== 'pastYear') {
@@ -98,7 +96,6 @@ async function togglePlay() {
     try {
       const Tone = await import('tone');
       await Tone.start();
-      console.log('Tone.js context started on user interaction');
       startPlayback();
       
       showSoundTip = false;
@@ -238,7 +235,6 @@ async function copyShareLink() {
 }
 
 onMount(() => {
-  // Check localStorage for previously shown tips and theme preference
   try {
     soundTipShown = localStorage.getItem('soundTipShown') === 'true';
     harmonyTipShown = localStorage.getItem('harmonyTipShown') === 'true';

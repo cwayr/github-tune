@@ -67,7 +67,7 @@ export class InfrastructureStack extends Stack {
       autoDeleteObjects: true,
     });
 
-    const apiFunction = new nodejs_lambda.NodejsFunction(this, `${namingPrefix}-fetcher-${environment}`, {
+    const contributionFetcherFn = new nodejs_lambda.NodejsFunction(this, `${namingPrefix}-fetcher-${environment}`, {
       functionName: `${namingPrefix}-contributionFetcher-${environment}`,
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'handler',
@@ -95,7 +95,7 @@ export class InfrastructureStack extends Stack {
 
     const lambdaIntegration = new apigw_integrations.HttpLambdaIntegration(
       `${namingPrefix}-lambdaIntegration-${environment}`,
-      apiFunction
+      contributionFetcherFn
     );
 
     httpApi.addRoutes({

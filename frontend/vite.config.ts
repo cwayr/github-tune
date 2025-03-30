@@ -6,5 +6,13 @@ export default defineConfig({
 	plugins: [sveltekit(), tailwindcss()],
 	resolve: {
 		extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json', '.svelte']
+	},
+	server: {
+		proxy: {
+			'/api': {
+				target: 'http://dev.githubtune.com',
+				changeOrigin: true
+			}
+		}
 	}
 });

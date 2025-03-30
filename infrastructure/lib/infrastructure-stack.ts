@@ -118,36 +118,15 @@ export class InfrastructureStack extends Stack {
         }),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
-      additionalBehaviors: {
+      additionalBehaviors: environment === 'prod' ? {
         '/api/*': {
           origin: apiOrigin,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-          originRequestPolicy: new cloudfront.OriginRequestPolicy(this, `${namingPrefix}-api-orgreq-policy-${environment}`, {
-            headerBehavior: cloudfront.OriginRequestHeaderBehavior.all(),
-            queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
-            cookieBehavior: cloudfront.OriginRequestCookieBehavior.none()
-          }),
-          ...(environment === 'dev' && devAccessHeaderValue ? {
-            functionAssociations: [
-              {
-                function: new cloudfront.Function(this, `${namingPrefix}-api-origin-fn-${environment}`, {
-                  code: cloudfront.FunctionCode.fromInline(`
-                    function handler(event) {
-                      var request = event.request;
-                      request.headers['${DEV_ACCESS_HEADER_NAME}'] = {value: "${devAccessHeaderValue}"};
-                      return request;
-                    }
-                  `),
-                  functionName: `${namingPrefix}-api-origin-fn-${environment}`,
-                }),
-                eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
-              },
-            ],
-          } : {}),
-        },
-      },
+          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER
+        }
+      } : {},
       defaultRootObject: 'index.html',
       errorResponses: [
         {
@@ -186,8 +165,51 @@ export class InfrastructureStack extends Stack {
       value: `https://${distribution.distributionDomainName}`,
     });
 
+    // Create a separate distribution just for API calls without WAF protection
+    if (environment === 'dev') {
+      const apiDistribution = new cloudfront.Distribution(this, `${namingPrefix}-api-distribution-${environment}`, {
+        defaultBehavior: {
+          origin: apiOrigin,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+          originRequestPolicy: new cloudfront.OriginRequestPolicy(this, `${namingPrefix}-api-origin-policy-${environment}`, {
+            headerBehavior: cloudfront.OriginRequestHeaderBehavior.all(),
+            queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
+            cookieBehavior: cloudfront.OriginRequestCookieBehavior.none()
+          }),
+        },
+        comment: 'API Distribution with no WAF',
+        domainNames: [`api.${environment}.${rootDomain}`],
+        certificate,
+        // No WAF for this distribution
+      });
+      
+      new route53.ARecord(this, `ApiAliasRecord-${environment}`, {
+        zone: hostedZone,
+        recordName: `api.${environment}.${rootDomain}`,
+        target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(apiDistribution)),
+      });
+      
+      // Update the frontend config to use the separate API domain
+      const configFileSeparateApi = new s3deploy.BucketDeployment(this, `${namingPrefix}-configDeploymentSeparateApi`, {
+        sources: [s3deploy.Source.data('config.js', `window.ENV = { VITE_API_URL: "https://api.${environment}.${rootDomain}" };`)],
+        destinationBucket: websiteBucket,
+      });
+      
+      websiteDeployment.node.addDependency(configFileSeparateApi);
+      configFile.node.addDependency(configFileSeparateApi);
+      
+      new CfnOutput(this, 'ApiDistributionUrl', {
+        value: `https://api.${environment}.${rootDomain}`,
+        description: 'URL for API endpoints (no WAF protection)',
+      });
+    }
+    
     new CfnOutput(this, 'FetcherApiUrl', {
-      value: `https://${domainName}/api`,
+      value: environment === 'dev' 
+        ? `https://api.${environment}.${rootDomain}` 
+        : `https://${domainName}/api`,
     });
   }
 }

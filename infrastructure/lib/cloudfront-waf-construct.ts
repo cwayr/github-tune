@@ -7,6 +7,7 @@ export interface CloudFrontWafConstructProps {
   namingPrefix: string;
   environment: string;
   devAccessHeaderValue?: string;
+  allowApiRequests?: boolean;
 }
 
 export class CloudFrontWafConstruct extends Construct {
@@ -40,6 +41,7 @@ export class CloudFrontWafConstruct extends Construct {
       if (!devAccessHeaderValue) {
         throw new Error('devAccessHeaderValue is required for dev environment');
       }
+      
       rules.push({
         name: 'DevAccessHeaderRule',
         priority: 1,
@@ -60,6 +62,29 @@ export class CloudFrontWafConstruct extends Construct {
           sampledRequestsEnabled: true,
         },
       });
+      
+      if (props.allowApiRequests) {
+        rules.push({
+          name: 'AllowApiRequestsRule',
+          priority: 0, // Higher priority than DevAccessHeaderRule
+          action: { allow: {} },
+          statement: {
+            byteMatchStatement: {
+              searchString: '/api/',
+              fieldToMatch: {
+                uriPath: {},
+              },
+              textTransformations: [{ priority: 0, type: 'NONE' }],
+              positionalConstraint: 'STARTS_WITH',
+            },
+          },
+          visibilityConfig: {
+            cloudWatchMetricsEnabled: true,
+            metricName: `${namingPrefix}-allowApiMetric`,
+            sampledRequestsEnabled: true,
+          },
+        });
+      }
     }
 
     const defaultAction = environment === 'dev' ? { block: {} } : { allow: {} };

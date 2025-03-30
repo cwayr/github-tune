@@ -50,6 +50,7 @@ export class InfrastructureStack extends Stack {
       namingPrefix,
       environment,
       devAccessHeaderValue: environment === 'dev' ? devAccessHeaderValue : undefined,
+      allowApiRequests: true, // Allow API requests to bypass the dev header check
     });
 
     const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {

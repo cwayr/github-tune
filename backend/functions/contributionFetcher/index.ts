@@ -24,9 +24,14 @@ interface YearFetchResult {
   contributions: ContributionYear | null;
 }
 
-// Concurrency controls to limit parallel requests
 const MAX_CONCURRENT_REQUESTS = 5;
-const RATE_LIMIT_DELAY_MS = 50; // Small delay between batches to avoid rate limiting
+const RATE_LIMIT_DELAY_MS = 50;
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': ['http://localhost:5173', '.githubtune.com'],
+  'Access-Control-Allow-Methods': 'GET',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
 
 /**
  * Extract year links from GitHub profile page HTML
@@ -202,6 +207,7 @@ export async function handler(event: LambdaEvent) {
     console.timeEnd('contributionFetcher');
     return {
       statusCode: 200,
+      headers: corsHeaders,
       body: JSON.stringify(allContributions),
     };
   } catch (error: unknown) {
@@ -209,14 +215,8 @@ export async function handler(event: LambdaEvent) {
     const errorResponse = handleError(error, 'contributionFetcher/handler');
     return {
       statusCode: errorResponse.statusCode,
+      headers: corsHeaders,
       body: JSON.stringify(errorResponse),
     };
   }
 }
-
-// Test handler for local development
-handler({
-  queryStringParameters: {
-    username: 'cwayr'
-  }
-})

@@ -21,7 +21,7 @@ import * as path from 'path';
 import { Construct } from 'constructs';
 import { CloudFrontWafConstruct } from './cloudfront-waf-construct';
 
-const DEV_ACCESS_HEADER_NAME = 'X-Dev-Access';
+const DEV_ACCESS_HEADER_NAME = 'x-dev-access';
 
 export class InfrastructureStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {

@@ -1,7 +1,7 @@
 import { Construct } from 'constructs';
 import { aws_wafv2 as wafv2, CfnOutput } from 'aws-cdk-lib';
 
-const DEV_ACCESS_HEADER_NAME = 'X-Dev-Access';
+const DEV_ACCESS_HEADER_NAME = 'x-dev-access';
 
 export interface CloudFrontWafConstructProps {
   namingPrefix: string;

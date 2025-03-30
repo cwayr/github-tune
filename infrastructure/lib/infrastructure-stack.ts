@@ -6,7 +6,6 @@ import {
   aws_s3 as s3,
   RemovalPolicy,
   aws_logs as logs,
-  aws_wafv2 as wafv2,
   aws_lambda as lambda,
   aws_route53 as route53,
   aws_apigatewayv2 as apigwv2,
@@ -20,14 +19,14 @@ import {
 } from 'aws-cdk-lib';
 import * as path from 'path';
 import { Construct } from 'constructs';
-import { DevWafConstruct } from './dev-waf-construct';
+import { CloudFrontWafConstruct } from './cloudfront-waf-construct';
 
 export class InfrastructureStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const namingPrefix = 'ghtune'
-    const rootDomain = 'githubtune.com'
+    const namingPrefix = 'ghtune';
+    const rootDomain = 'githubtune.com';
     const backendFnsPath = '../../backend/functions';
     const frontendBuildPath = '../../frontend/build';
 
@@ -41,23 +40,15 @@ export class InfrastructureStack extends Stack {
       if (!devAccessHeaderValue) {
         throw new Error('Context variable "devAccessHeaderValue" must be provided for the "dev" environment.');
       }
-    } else {
-      if (this.node.tryGetContext('devAccessHeaderValue')) {
-        console.warn('Context variable "devAccessHeaderValue" was provided for a non-dev environment and will be ignored.');
-      }
+    } else if (this.node.tryGetContext('devAccessHeaderValue')) {
+      console.warn('Context variable "devAccessHeaderValue" was provided for a non-dev environment and will be ignored.');
     }
 
-    let devWaf: DevWafConstruct | undefined = undefined;
-    if (environment === 'dev') {
-      devWaf = new DevWafConstruct(this, 'DevWaf', {
-        namingPrefix: namingPrefix,
-        devAccessHeaderValue: devAccessHeaderValue!,
-      });
-    } else {
-      if (this.node.tryGetContext('devAccessHeaderValue')) {
-        console.warn('Context variable "devAccessHeaderValue" was provided for a non-dev environment and will be ignored.');
-      }
-    }
+    const cloudFrontWaf = new CloudFrontWafConstruct(this, 'CloudFrontWaf', {
+      namingPrefix,
+      environment,
+      devAccessHeaderValue: environment === 'dev' ? devAccessHeaderValue : undefined,
+    });
 
     const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
       domainName: rootDomain,
@@ -97,10 +88,7 @@ export class InfrastructureStack extends Stack {
       corsPreflight: {
         allowHeaders: ['Content-Type'],
         allowMethods: [apigwv2.CorsHttpMethod.GET],
-        allowOrigins: [
-          `https://${domainName}`,
-          'http://localhost:5173',
-        ],
+        allowOrigins: [`https://${domainName}`, 'http://localhost:5173'],
         maxAge: Duration.days(10),
       },
     });
@@ -116,39 +104,8 @@ export class InfrastructureStack extends Stack {
       integration: lambdaIntegration,
     });
 
-    const regionalWaf = new wafv2.CfnWebACL(this, `${namingPrefix}-regionalWaf-${environment}`, {
-      defaultAction: { allow: {} }, // Default allow, block based on rules
-      scope: 'REGIONAL',
-      visibilityConfig: {
-        cloudWatchMetricsEnabled: true,
-        metricName: `${namingPrefix}-regionalWafMetric-${environment}`,
-        sampledRequestsEnabled: true, // Enable sampling for debugging
-      },
-      name: `${namingPrefix}-regional-waf-${environment}`,
-      rules: [
-        {
-          name: 'ApiRateLimitRule',
-          priority: 0,
-          action: { block: {} },
-          statement: {
-            rateBasedStatement: {
-              limit: 500, // 500 requests per 5 minutes per IP
-              aggregateKeyType: 'IP',
-            },
-          },
-          visibilityConfig: {
-            cloudWatchMetricsEnabled: true,
-            metricName: `${namingPrefix}-apiRateLimitMetric-${environment}`,
-            sampledRequestsEnabled: true,
-          },
-        },
-      ],
-    });
-
-    new wafv2.CfnWebACLAssociation(this, `${namingPrefix}-wafAssociation-${environment}`, {
-      resourceArn: `arn:aws:apigateway:${this.region}::/apis/${httpApi.httpApiId}/stages/$default`,
-      webAclArn: regionalWaf.attrArn,
-    });
+    const apiDomain = httpApi.url ? new URL(httpApi.url).hostname : '';
+    const apiOrigin = new origins.HttpOrigin(apiDomain);
 
     const distribution = new cloudfront.Distribution(this, `${namingPrefix}-distribution-${environment}`, {
       defaultBehavior: {
@@ -156,6 +113,15 @@ export class InfrastructureStack extends Stack {
           originAccessIdentity: new cloudfront.OriginAccessIdentity(this, `${namingPrefix}-oai-${environment}`),
         }),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      },
+      additionalBehaviors: {
+        '/api/*': {
+          origin: apiOrigin,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
+        },
       },
       defaultRootObject: 'index.html',
       errorResponses: [
@@ -166,8 +132,8 @@ export class InfrastructureStack extends Stack {
         },
       ],
       domainNames: [domainName],
-      certificate: certificate,
-      webAclId: devWaf?.webAclArn,
+      certificate,
+      webAclId: cloudFrontWaf.webAclArn,
     });
 
     new route53.ARecord(this, `AliasRecord-${environment}`, {
@@ -176,12 +142,8 @@ export class InfrastructureStack extends Stack {
       target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(distribution)),
     });
 
-    const apiUrl = httpApi.url ? httpApi.url.slice(0, -1) : ''; // Remove trailing slash if present
-    console.log('adding api url', apiUrl)
     const configFile = new s3deploy.BucketDeployment(this, `${namingPrefix}-configDeployment`, {
-      sources: [
-        s3deploy.Source.data('config.js', `window.ENV = { VITE_API_URL: "${apiUrl}" };`),
-      ],
+      sources: [s3deploy.Source.data('config.js', `window.ENV = { VITE_API_URL: "/api" };`)],
       destinationBucket: websiteBucket,
     });
 
@@ -200,7 +162,7 @@ export class InfrastructureStack extends Stack {
     });
 
     new CfnOutput(this, 'FetcherApiUrl', {
-      value: apiUrl,
+      value: `https://${domainName}/api`,
     });
   }
 }

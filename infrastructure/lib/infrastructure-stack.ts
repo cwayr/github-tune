@@ -104,7 +104,8 @@ export class InfrastructureStack extends Stack {
       integration: lambdaIntegration,
     });
 
-    const apiDomain = httpApi.url ? new URL(httpApi.url).hostname : '';
+    const apiDomain = `${httpApi.apiId}.execute-api.${this.region}.amazonaws.com`;
+
     const apiOrigin = new origins.HttpOrigin(apiDomain);
 
     const distribution = new cloudfront.Distribution(this, `${namingPrefix}-distribution-${environment}`, {

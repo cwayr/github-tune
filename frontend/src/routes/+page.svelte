@@ -44,7 +44,7 @@ let copiedTipTimer: ReturnType<typeof setTimeout> | null = null;
 
 const tipDuration = 6000;
 
-const apiUrl = import.meta.env.VITE_API_URL || '/api';
+const apiUrl = import.meta.env.VITE_API_URL || '/api/';
 
 function handleSubmit() {
   if (username) {

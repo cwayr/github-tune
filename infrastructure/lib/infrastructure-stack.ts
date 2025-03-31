@@ -19,7 +19,6 @@ import {
 } from 'aws-cdk-lib';
 import * as path from 'path';
 import { Construct } from 'constructs';
-// import { CloudFrontWafConstruct } from './cloudfront-waf-construct';
 
 const DEV_ACCESS_HEADER_NAME = 'x-dev-access';
 
@@ -45,13 +44,6 @@ export class InfrastructureStack extends Stack {
     } else if (this.node.tryGetContext('devAccessHeaderValue')) {
       console.warn('Context variable "devAccessHeaderValue" was provided for a non-dev environment and will be ignored.');
     }
-
-    // const cloudFrontWaf = new CloudFrontWafConstruct(this, 'CloudFrontWaf', {
-    //   namingPrefix,
-    //   environment,
-    //   devAccessHeaderValue: environment === 'dev' ? devAccessHeaderValue : undefined,
-    //   allowApiRequests: true, // Allow API requests to bypass the dev header check
-    // });
 
     const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
       domainName: rootDomain,
@@ -90,7 +82,7 @@ export class InfrastructureStack extends Stack {
       apiName: `${namingPrefix}-httpApi-${environment}`,
       corsPreflight: {
         allowHeaders: ['Content-Type', DEV_ACCESS_HEADER_NAME],
-        allowMethods: [apigwv2.CorsHttpMethod.GET],
+        allowMethods: [apigwv2.CorsHttpMethod.ANY], // Changed to ANY for flexibility
         allowOrigins: [`https://${domainName}`, 'http://localhost:5173'],
         maxAge: Duration.days(10),
       },
@@ -101,9 +93,10 @@ export class InfrastructureStack extends Stack {
       contributionFetcherFn
     );
 
+    // Updated route to /api/{proxy+} instead of /{proxy+}
     httpApi.addRoutes({
-      path: '/{proxy+}',
-      methods: [apigwv2.HttpMethod.GET],
+      path: '/api/{proxy+}', // Matches /api/contributions, /api/anything
+      methods: [apigwv2.HttpMethod.ANY], // Changed to ANY for broader support
       integration: lambdaIntegration,
     });
 
@@ -121,31 +114,14 @@ export class InfrastructureStack extends Stack {
       additionalBehaviors: {
         '/api/*': {
           origin: apiOrigin,
-          allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL, // Changed to ALLOW_ALL
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
           originRequestPolicy: new cloudfront.OriginRequestPolicy(this, `${namingPrefix}-api-orgreq-policy-${environment}`, {
             headerBehavior: cloudfront.OriginRequestHeaderBehavior.all(),
             queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
-            cookieBehavior: cloudfront.OriginRequestCookieBehavior.none()
+            cookieBehavior: cloudfront.OriginRequestCookieBehavior.none(),
           }),
-          // ...(environment === 'dev' && devAccessHeaderValue ? {
-          //   functionAssociations: [
-          //     {
-          //       function: new cloudfront.Function(this, `${namingPrefix}-api-origin-fn-${environment}`, {
-          //         code: cloudfront.FunctionCode.fromInline(`
-          //           function handler(event) {
-          //             var request = event.request;
-          //             request.headers['${DEV_ACCESS_HEADER_NAME}'] = {value: "${devAccessHeaderValue}"};
-          //             return request;
-          //           }
-          //         `),
-          //         functionName: `${namingPrefix}-api-origin-fn-${environment}`,
-          //       }),
-          //       eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
-          //     },
-          //   ],
-          // } : {}),
         },
       },
       defaultRootObject: 'index.html',
@@ -158,7 +134,6 @@ export class InfrastructureStack extends Stack {
       ],
       domainNames: [domainName],
       certificate,
-      // webAclId: cloudFrontWaf.webAclArn,
     });
 
     new route53.ARecord(this, `AliasRecord-${environment}`, {
@@ -191,4 +166,3 @@ export class InfrastructureStack extends Stack {
     });
   }
 }
-

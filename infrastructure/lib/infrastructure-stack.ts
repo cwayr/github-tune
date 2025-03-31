@@ -93,10 +93,9 @@ export class InfrastructureStack extends Stack {
       contributionFetcherFn
     );
 
-    // Updated route to /api/{proxy+} instead of /{proxy+}
     httpApi.addRoutes({
-      path: '/api/{proxy+}', // Matches /api/contributions, /api/anything
-      methods: [apigwv2.HttpMethod.ANY], // Changed to ANY for broader support
+      path: '/api/{proxy+}',
+      methods: [apigwv2.HttpMethod.ANY],
       integration: lambdaIntegration,
     });
 
@@ -114,7 +113,7 @@ export class InfrastructureStack extends Stack {
       additionalBehaviors: {
         '/api/*': {
           origin: apiOrigin,
-          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL, // Changed to ALLOW_ALL
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
           originRequestPolicy: new cloudfront.OriginRequestPolicy(this, `${namingPrefix}-api-orgreq-policy-${environment}`, {
@@ -134,6 +133,10 @@ export class InfrastructureStack extends Stack {
       ],
       domainNames: [domainName],
       certificate,
+      logBucket: new s3.Bucket(this, `${namingPrefix}-cloudfront-logs-${environment}`, {
+        removalPolicy: RemovalPolicy.DESTROY,
+        autoDeleteObjects: true,
+      }),
     });
 
     new route53.ARecord(this, `AliasRecord-${environment}`, {

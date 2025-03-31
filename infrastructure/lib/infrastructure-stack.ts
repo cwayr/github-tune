@@ -136,6 +136,8 @@ export class InfrastructureStack extends Stack {
       logBucket: new s3.Bucket(this, `${namingPrefix}-cloudfront-logs-${environment}`, {
         removalPolicy: RemovalPolicy.DESTROY,
         autoDeleteObjects: true,
+        objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_ENFORCED,
+        blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       }),
     });
 

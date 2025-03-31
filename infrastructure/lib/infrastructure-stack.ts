@@ -116,11 +116,7 @@ export class InfrastructureStack extends Stack {
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-          originRequestPolicy: new cloudfront.OriginRequestPolicy(this, `${namingPrefix}-api-orgreq-policy-${environment}`, {
-            headerBehavior: cloudfront.OriginRequestHeaderBehavior.all(),
-            queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
-            cookieBehavior: cloudfront.OriginRequestCookieBehavior.none(),
-          }),
+          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
         },
       },
       defaultRootObject: 'index.html',
@@ -163,7 +159,7 @@ export class InfrastructureStack extends Stack {
     websiteDeployment.node.addDependency(configFile);
 
     new CfnOutput(this, 'SiteURL', {
-      value: `https://${distribution.distributionDomainName}`,
+      value: `https://${domainName}`,
     });
 
     new CfnOutput(this, 'FetcherApiUrl', {

@@ -2,19 +2,7 @@
 
 **Turn your GitHub contribution graph into a musical melody.**
 
-![GitHub Tune Banner](https://assets.vercel.com/blog/github-contribution-graph.png)
-
 GitHub Tune transforms your contribution history into music, creating a unique melody that represents your coding journey. Each contribution level generates a different note, bringing your GitHub activity to life through sound.
-
-## ✨ Features
-
-- **Interactive Contribution Graph**: Visualize your GitHub activity with an elegant, responsive graph
-- **Musical Interpretation**: Convert contribution patterns into beautiful melodies
-- **Multiple Musical Scales**: Choose from various musical scales to customize your melody
-- **Harmonic Accompaniment**: Add optional harmonies to enhance your contribution melody
-- **Year Selection**: Explore and play contribution patterns from different years
-- **Dark/Light Themes**: Switch between visual themes for comfortable viewing
-- **Responsive Design**: Enjoy a seamless experience on any device
 
 ## 🎮 Demo
 
@@ -24,33 +12,6 @@ Visit [GitHubTune.com](https://githubtune.com) to try it now!
 2. Watch as your contribution graph is visualized
 3. Press play to hear your coding activity as music
 4. Adjust speed, scale, and harmony settings to customize
-
-## 🏛️ Architecture
-
-This project uses a modern, serverless architecture:
-
-```mermaid
-graph TD
-    User(User) -->|Uses| Frontend
-    Frontend -->|Requests Data| API
-    API -->|Invokes| Lambda
-    Lambda -->|Scrapes| GitHub
-    GitHub -->|Returns HTML| Lambda
-    Lambda -->|Parses Data| Lambda
-    Lambda -->|Returns JSON| API
-    API -->|Delivers Data| Frontend
-    Frontend -->|Generates Music| Tone.js
-    
-    classDef userNode fill:#f9f,stroke:#333,stroke-width:2px;
-    classDef frontendNode fill:#bbf,stroke:#333,stroke-width:1px;
-    classDef backendNode fill:#bfb,stroke:#333,stroke-width:1px;
-    classDef externalNode fill:#fbb,stroke:#333,stroke-width:1px;
-
-    class User userNode;
-    class Frontend,Tone.js frontendNode;
-    class API,Lambda backendNode;
-    class GitHub externalNode;
-```
 
 ### Components
 

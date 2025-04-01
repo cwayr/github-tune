@@ -11,42 +11,7 @@ The GitHub Tune application is deployed on AWS with the following architecture:
 - **API**: API Gateway HTTP API for RESTful endpoints
 - **DNS**: Route 53 for domain management with SSL/TLS certificate
 
-```mermaid
-graph TD
-    subgraph "AWS Cloud"
-        subgraph "CloudFront"
-            CF[CloudFront Distribution]  
-        end
-        subgraph "S3"
-            S3Web[Website Bucket]  
-            S3Logs[CloudFront Logs Bucket]
-        end
-        subgraph "API Gateway"
-            API[HTTP API]  
-        end
-        subgraph "Lambda"
-            Lambda[Contribution Fetcher Function]  
-        end
-        subgraph "Route 53"
-            DNS[DNS Records]  
-        end
-        subgraph "ACM"
-            Cert[SSL Certificate]  
-        end
-        
-        User((User)) -->|HTTPS| DNS
-        DNS -->|DNS Resolution| CF
-        CF -->|Static Content| S3Web
-        CF -->|API Requests| API
-        API -->|Invokes| Lambda
-        CF -->|Logs| S3Logs
-        Cert -->|SSL/TLS| CF
-    end
-```
-
-*Architecture diagram showing the AWS resources and their relationships*
-
-## Resources Provisioned
+### Resources Provisioned
 
 The CDK stack provisions the following AWS resources:
 

@@ -20,8 +20,6 @@ import {
 import * as path from 'path';
 import { Construct } from 'constructs';
 
-const DEV_ACCESS_HEADER_NAME = 'x-dev-access';
-
 export class InfrastructureStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
@@ -34,16 +32,6 @@ export class InfrastructureStack extends Stack {
     const environment = this.node.tryGetContext('environment') || 'dev';
     console.log(`Deploying to ${environment} environment`);
     const domainName = environment === 'prod' ? rootDomain : `${environment}.${rootDomain}`;
-
-    let devAccessHeaderValue: string | undefined = undefined;
-    if (environment === 'dev') {
-      devAccessHeaderValue = this.node.tryGetContext('devAccessHeaderValue');
-      if (!devAccessHeaderValue) {
-        throw new Error('Context variable "devAccessHeaderValue" must be provided for the "dev" environment.');
-      }
-    } else if (this.node.tryGetContext('devAccessHeaderValue')) {
-      console.warn('Context variable "devAccessHeaderValue" was provided for a non-dev environment and will be ignored.');
-    }
 
     const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
       domainName: rootDomain,
@@ -86,7 +74,7 @@ export class InfrastructureStack extends Stack {
     const httpApi = new apigwv2.HttpApi(this, `${namingPrefix}-httpApi-${environment}`, {
       apiName: `${namingPrefix}-httpApi-${environment}`,
       corsPreflight: {
-        allowHeaders: ['Content-Type', DEV_ACCESS_HEADER_NAME],
+        allowHeaders: ['Content-Type'],
         allowMethods: [apigwv2.CorsHttpMethod.ANY],
         allowOrigins: allowedOrigins,
         maxAge: Duration.days(10),

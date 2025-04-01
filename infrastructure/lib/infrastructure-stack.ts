@@ -66,7 +66,7 @@ export class InfrastructureStack extends Stack {
       functionName: `${namingPrefix}-contributionFetcher-${environment}`,
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'handler',
-      memorySize: 1024,
+      memorySize: 2048,
       entry: path.join(__dirname, `${backendFnsPath}/contributionFetcher/index.ts`),
       timeout: Duration.seconds(30),
       bundling: {
@@ -78,12 +78,17 @@ export class InfrastructureStack extends Stack {
       logRetention: logs.RetentionDays.TWO_WEEKS,
     });
 
+    const allowedOrigins = [`https://${domainName}`];
+    if (environment === 'dev') {
+      allowedOrigins.push('http://localhost:5173');
+    }
+
     const httpApi = new apigwv2.HttpApi(this, `${namingPrefix}-httpApi-${environment}`, {
       apiName: `${namingPrefix}-httpApi-${environment}`,
       corsPreflight: {
         allowHeaders: ['Content-Type', DEV_ACCESS_HEADER_NAME],
-        allowMethods: [apigwv2.CorsHttpMethod.ANY], // Changed to ANY for flexibility
-        allowOrigins: [`https://${domainName}`, 'http://localhost:5173'],
+        allowMethods: [apigwv2.CorsHttpMethod.ANY],
+        allowOrigins: allowedOrigins,
         maxAge: Duration.days(10),
       },
     });

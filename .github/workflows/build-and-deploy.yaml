@@ -51,5 +51,4 @@ jobs:
           npx cdk deploy \
           --all \
           --require-approval never \
-          --context environment=${{ github.event_name == 'release' && 'prod' || 'dev' }} \
-          ${{ github.event_name != 'release' && format('--context devAccessHeaderValue={0}', env.DEV_ACCESS_SECRET) || '' }}
+          --context environment=${{ github.event_name == 'release' && 'prod' || 'dev' }}

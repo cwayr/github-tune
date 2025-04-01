@@ -452,7 +452,7 @@ onMount(() => {
       <p>Created with Tone.js and Svelte</p>
       <p class="footer-note">
         Piano samples from <a href="https://archive.org/details/SalamanderGrandPianoV3" target="_blank" rel="noopener noreferrer">Salamander Grand Piano</a> • 
-        <a href="https://github.com/cwayr/contribution-medley" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+        <a href="https://github.com/cwayr/github-tune" target="_blank" rel="noopener noreferrer">View on GitHub</a>
       </p>
     </div>
   </footer>

@@ -11,7 +11,6 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    environment: ${{ github.event_name == 'release' && 'prod' || 'dev' }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -42,13 +41,13 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
-        
-      - name: Deploy infrastructure
+
+      - name: Synth on push or workflow dispatch
         working-directory: ./infrastructure
-        env:
-          DEV_ACCESS_SECRET: ${{ secrets.DEV_ACCESS_SECRET }}
-        run: |
-          npx cdk deploy \
-          --all \
-          --require-approval never \
-          --context environment=${{ github.event_name == 'release' && 'prod' || 'dev' }}
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: npx cdk synth
+        
+      - name: Deploy on release
+        working-directory: ./infrastructure
+        if: github.event_name == 'release'
+        run: npx cdk deploy --all --require-approval never

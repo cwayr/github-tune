@@ -25,33 +25,27 @@ export class InfrastructureStack extends Stack {
     super(scope, id, props);
 
     const namingPrefix = 'ghtune';
-    const rootDomain = 'githubtune.com';
+    const domainName = 'githubtune.com';
     const backendFnsPath = '../../backend/functions';
     const frontendBuildPath = '../../frontend/build';
 
-    const environment = this.node.tryGetContext('environment') || 'dev';
-    console.log(`Deploying to ${environment} environment`);
-    const domainName = environment === 'prod' ? rootDomain : `${environment}.${rootDomain}`;
-
-    const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
-      domainName: rootDomain,
-    });
+    const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', { domainName });
 
     const certificate = new acm.Certificate(this, 'Certificate', {
-      domainName: rootDomain,
-      subjectAlternativeNames: [`*.${rootDomain}`],
+      domainName,
+      subjectAlternativeNames: [`*.${domainName}`],
       validation: acm.CertificateValidation.fromDns(hostedZone),
     });
 
-    const websiteBucket = new s3.Bucket(this, `${namingPrefix}-srcbkt-${environment}`, {
-      bucketName: `${namingPrefix}-srcbkt-${environment}`,
+    const websiteBucket = new s3.Bucket(this, `${namingPrefix}-srcbkt`, {
+      bucketName: `${namingPrefix}-srcbkt`,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
     });
 
-    const contributionFetcherFn = new nodejs_lambda.NodejsFunction(this, `${namingPrefix}-fetcher-${environment}`, {
-      functionName: `${namingPrefix}-contributionFetcher-${environment}`,
+    const contributionFetcherFn = new nodejs_lambda.NodejsFunction(this, `${namingPrefix}-fetcher`, {
+      functionName: `${namingPrefix}-contributionFetcher`,
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'handler',
       memorySize: 2048,
@@ -67,12 +61,9 @@ export class InfrastructureStack extends Stack {
     });
 
     const allowedOrigins = [`https://${domainName}`];
-    if (environment === 'dev') {
-      allowedOrigins.push('http://localhost:5173');
-    }
 
-    const httpApi = new apigwv2.HttpApi(this, `${namingPrefix}-httpApi-${environment}`, {
-      apiName: `${namingPrefix}-httpApi-${environment}`,
+    const httpApi = new apigwv2.HttpApi(this, `${namingPrefix}-httpApi`, {
+      apiName: `${namingPrefix}-httpApi`,
       corsPreflight: {
         allowHeaders: ['Content-Type'],
         allowMethods: [apigwv2.CorsHttpMethod.ANY],
@@ -82,7 +73,7 @@ export class InfrastructureStack extends Stack {
     });
 
     const lambdaIntegration = new apigw_integrations.HttpLambdaIntegration(
-      `${namingPrefix}-lambdaIntegration-${environment}`,
+      `${namingPrefix}-lambdaIntegration`,
       contributionFetcherFn
     );
 
@@ -96,10 +87,10 @@ export class InfrastructureStack extends Stack {
 
     const apiOrigin = new origins.HttpOrigin(apiDomain);
 
-    const distribution = new cloudfront.Distribution(this, `${namingPrefix}-distribution-${environment}`, {
+    const distribution = new cloudfront.Distribution(this, `${namingPrefix}-distribution`, {
       defaultBehavior: {
         origin: new origins.S3Origin(websiteBucket, {
-          originAccessIdentity: new cloudfront.OriginAccessIdentity(this, `${namingPrefix}-oai-${environment}`),
+          originAccessIdentity: new cloudfront.OriginAccessIdentity(this, `${namingPrefix}-oai`),
         }),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
@@ -122,7 +113,8 @@ export class InfrastructureStack extends Stack {
       ],
       domainNames: [domainName],
       certificate,
-      logBucket: new s3.Bucket(this, `${namingPrefix}-cloudfront-logs-${environment}`, {
+      logBucket: new s3.Bucket(this, `${namingPrefix}-cloudfront-logs`, {
+        bucketName: `${namingPrefix}-cloudfront-logs`,
         removalPolicy: RemovalPolicy.DESTROY,
         autoDeleteObjects: true,
         objectOwnership: s3.ObjectOwnership.OBJECT_WRITER,
@@ -130,7 +122,7 @@ export class InfrastructureStack extends Stack {
       }),
     });
 
-    new route53.ARecord(this, `AliasRecord-${environment}`, {
+    new route53.ARecord(this, `AliasRecord`, {
       zone: hostedZone,
       recordName: domainName,
       target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(distribution)),

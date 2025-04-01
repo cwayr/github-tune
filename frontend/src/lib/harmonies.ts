@@ -18,20 +18,20 @@ export const simpleScales: Record<string, MusicScale> = {
     notes: [
       ['C2', 'F2', 'F2'], 
       ['G3', 'C4', 'D4'],
-      ['D4', 'E4', 'G4'],
-      ['G4', 'B4', 'D5'],
-      ['C5', 'E5', 'F5'],
-      ['E5', 'G5', 'B5'],
-      ['G5', 'B5', 'D6'],
+      ['E4', 'E4', 'G4'],
+      ['G4', 'C4', 'D5'],
+      ['C5', 'D5', 'E5'],
+      ['D5', 'G5', 'B5'],
+      ['G5', 'C5', 'D6'],
     ]
   },
   melancholy: {
     name: 'Melancholy',
     notes: [
       ['A2', 'D2', 'E2'], 
-      ['E3', 'A3', 'D4'],
-      ['A3', 'B3', 'C4'],
-      ['C4', 'G4', 'A4'],
+      ['E3', 'A3', 'C4'],
+      ['A3', 'B3', 'D4'],
+      ['C4', 'E4', 'G4'],
       ['G4', 'A4', 'B4'],
       ['B4', 'C5', 'D5'],
       ['E5', 'G5', 'A5'],
@@ -43,10 +43,10 @@ export const harmonizedScales: Record<string, MusicScale> = {
   i: {
     name: 'C Major',
     notes: [
-      ['C4', 'D4', 'E4'], 
+      ['G3', 'C4', 'D4'], 
       ['E4', 'G4', 'C5'],
       ['G4', 'B4', 'D5'],
-      ['B4', 'C5', 'D5'],
+      ['C5', 'D5', 'E5'],
       ['D5', 'E5', 'G5'],
       ['E5', 'G5', 'C6'],
       ['C6', 'B5', 'D6'],
@@ -55,13 +55,13 @@ export const harmonizedScales: Record<string, MusicScale> = {
   ii: {
     name: 'D Minor',
     notes: [
-      ['D4', 'E4', 'F4'], 
+      ['A3', 'C4', 'D4'], 
+      ['D4', 'F4', 'A4'],
       ['F4', 'A4', 'C5'],
       ['A4', 'C5', 'D5'],
-      ['C5', 'D5', 'E5'],
-      ['D5', 'E5', 'F5'],
+      ['C5', 'E5', 'F5'],
       ['F5', 'G5', 'A5'],
-      ['D6', 'C6', 'E6'],
+      ['A5', 'C6', 'E6'],
     ]
   },
   iii: {
@@ -71,7 +71,7 @@ export const harmonizedScales: Record<string, MusicScale> = {
       ['E4', 'G4', 'A4'],
       ['G4', 'B4', 'D5'],
       ['B4', 'D5', 'E5'],
-      ['D5', 'E5', 'G5'],
+      ['E5', 'G5', 'B5'],
       ['G5', 'A5', 'B5'],
       ['B5', 'E6', 'G6'],
     ]
@@ -85,7 +85,7 @@ export const harmonizedScales: Record<string, MusicScale> = {
       ['C5', 'E5', 'F5'],
       ['E5', 'F5', 'G5'],
       ['G5', 'A5', 'C6'],
-      ['A5', 'C6', 'E6'],
+      ['C6', 'C6', 'E6'],
     ]
   },
   v: {
@@ -103,13 +103,13 @@ export const harmonizedScales: Record<string, MusicScale> = {
   vi: {
     name: 'A Minor',
     notes: [
-      ['C4', 'D4', 'E4'], 
+      ['A3', 'C4', 'D4'], 
       ['E4', 'G4', 'A4'],
       ['G4', 'A4', 'C5'],
-      ['B4', 'C5', 'E5'],
+      ['C5', 'D5', 'E5'],
       ['E5', 'G5', 'A5'],
       ['A5', 'B5', 'C6'],
-      ['C6', 'B5', 'D6'],
+      ['B5', 'C6', 'D6'],
     ]
   }
 }

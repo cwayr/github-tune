@@ -15,7 +15,6 @@
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   
   onMount(() => {
-    // Small delay before showing the tip for better UX
     setTimeout(() => {
       visible = true;
       
@@ -38,7 +37,6 @@
       timeoutId = null;
     }
     
-    // Allow time for the hide animation before dispatching close event
     setTimeout(() => {
       dispatch('close');
     }, 300);

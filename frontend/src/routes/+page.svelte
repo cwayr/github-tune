@@ -167,7 +167,6 @@ function updateSettings(event: CustomEvent | { detail: any }) {
   if (playbackSettings.harmony.enabled) {
     if (!harmonyTipShown) {
       harmonyTipShown = true;
-      // Save to localStorage that harmony tip has been shown
       try {
         localStorage.setItem('harmonyTipShown', 'true');
       } catch (e) {
@@ -188,7 +187,6 @@ function toggleTheme() {
   theme = theme === 'light' ? 'dark' : 'light';
   document.body.classList.toggle('dark-mode');
   
-  // Save theme preference to local storage
   try {
     localStorage.setItem('theme', theme);
   } catch (e) {
@@ -200,15 +198,12 @@ function generateShareLink(): string {
   const baseUrl = window.location.origin;
   const params = new URLSearchParams();
   
-  // Add username
   params.set('user', username);
   
-  // Add selected year if it's not the default
   if (selectedYear !== 'pastYear') {
     params.set('year', selectedYear);
   }
   
-  // Add playback settings
   params.set('speed', playbackSettings.speed.toString());
   params.set('harmony', playbackSettings.harmony.enabled ? '1' : '0');
   params.set('mood', playbackSettings.harmony.enabled ? 
@@ -455,7 +450,10 @@ onMount(() => {
   <footer class="app-footer">
     <div class="container">
       <p>Created with Tone.js and Svelte</p>
-      <p class="footer-note">Piano samples from <a href="https://archive.org/details/SalamanderGrandPianoV3" target="_blank" rel="noopener noreferrer">Salamander Grand Piano</a></p>
+      <p class="footer-note">
+        Piano samples from <a href="https://archive.org/details/SalamanderGrandPianoV3" target="_blank" rel="noopener noreferrer">Salamander Grand Piano</a> • 
+        <a href="https://github.com/cwayr/contribution-medley" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+      </p>
     </div>
   </footer>
 </main>

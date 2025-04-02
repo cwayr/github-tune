@@ -1,6 +1,9 @@
 <script lang="ts">
 	import '../app.css';
 	import { page } from '$app/stores';
+	import { browser } from '$app/environment';
+	import { onMount } from 'svelte';
+
 	let { children } = $props();
 
 	let siteName = 'GitHub Tune';
@@ -9,16 +12,25 @@
 	let defaultImage = `${siteUrl}/og-image.png`;
 	let defaultTitle = 'GitHub Tune - Create Music from Your Contributions';
 	
-	let username = $derived($page.url.searchParams.get('user') || 
-				 ($page.params.username ? $page.params.username : ''));
-	let title = $derived(username ? 
-			 `${username}'s GitHub GitHub Tune` : 
+	let currentUsername = '';
+	
+	onMount(() => {
+		if (browser) {
+			const params = new URLSearchParams(window.location.search);
+			const userParam = params.get('user');
+			const pathUsername = $page.params.username;
+			currentUsername = userParam || pathUsername || '';
+		}
+	});
+
+	let title = $derived(currentUsername ? 
+			 `${currentUsername}'s GitHub GitHub Tune` : 
 			 defaultTitle);
-	let description = $derived(username ? 
-			 `Listen to ${username}'s GitHub contributions as a beautiful melody. GitHub Tune transforms commits into music.` : 
+	let description = $derived(currentUsername ? 
+			 `Listen to ${currentUsername}'s GitHub contributions as a beautiful melody. GitHub Tune transforms commits into music.` : 
 			 defaultDescription);
-	let canonicalUrl = $derived(username ? 
-			 `${siteUrl}/${username}` : 
+	let canonicalUrl = $derived(currentUsername ? 
+			 `${siteUrl}/${currentUsername}` : 
 			 siteUrl);
 </script>
 

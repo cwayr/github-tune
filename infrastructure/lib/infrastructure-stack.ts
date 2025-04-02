@@ -85,11 +85,7 @@ export class InfrastructureStack extends Stack {
       corsPreflight: {
         allowHeaders: ['Content-Type'],
         allowMethods: [apigwv2.CorsHttpMethod.ANY],
-        allowOrigins: [
-          `https://${domainName}`,
-          'http://localhost:5173',
-          'http://localhost:4173'
-        ],
+        allowOrigins: [`https://${domainName}`, 'http://localhost:5173'],
         maxAge: Duration.days(10),
       },
     });
@@ -117,7 +113,7 @@ export class InfrastructureStack extends Stack {
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
       additionalBehaviors: {
-        '/api/*': {
+        'api/*': {
           origin: apiOrigin,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
@@ -155,20 +151,13 @@ export class InfrastructureStack extends Stack {
       target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(distribution)),
     });
 
-    const configFile = new s3deploy.BucketDeployment(this, `${namingPrefix}-configDeployment`, {
-      sources: [s3deploy.Source.data('config.js', `window.ENV = { VITE_API_URL: "/api" };`)],
-      destinationBucket: websiteBucket,
-    });
-
-    const websiteDeployment = new s3deploy.BucketDeployment(this, `${namingPrefix}-websiteDeployment`, {
+    new s3deploy.BucketDeployment(this, `${namingPrefix}-websiteDeployment`, {
       sources: [s3deploy.Source.asset(path.join(__dirname, frontendBuildPath))],
       destinationBucket: websiteBucket,
       distribution,
       distributionPaths: ['/*'],
       prune: false,
     });
-
-    websiteDeployment.node.addDependency(configFile);
 
     new CfnOutput(this, 'SiteURL', {
       value: `https://${domainName}`,

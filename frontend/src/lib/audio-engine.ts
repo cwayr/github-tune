@@ -11,6 +11,7 @@ class AudioEngine {
   private initPromise: Promise<void> | null = null;
   private startTime: number | null = null;
   private lastHarmonyIndex: number = -1;
+  private isPreloading = false;
   
   private async initAudio(): Promise<void> {
     if (this.initPromise) {
@@ -219,6 +220,31 @@ class AudioEngine {
       this.activeNotes = [];
     }
     this.startTime = null;
+  }
+  
+  /**
+   * Preload all necessary audio samples and initialize the audio engine
+   * without starting audio playback. This should be called during component mount
+   * to reduce the delay when the user clicks play.
+   * @returns Promise that resolves when preloading is complete
+   */
+  public preloadSounds(): Promise<void> {
+    if (this.isPreloading || this.samplesLoaded) {
+      return this.initPromise || Promise.resolve();
+    }
+    
+    this.isPreloading = true;
+    console.log('Preloading Tone.js resources and audio samples');
+    
+    return this.initAudio()
+      .then(() => {
+        console.log('Tone.js resources and samples preloaded successfully');
+        this.isPreloading = false;
+      })
+      .catch(err => {
+        console.error('Failed to preload audio resources:', err);
+        this.isPreloading = false;
+      });
   }
   
   /**

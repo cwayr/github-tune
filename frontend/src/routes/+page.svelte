@@ -13,6 +13,8 @@ import Tip from '../components/Tip.svelte';
 import { getAvailableHarmonies, audioEngine } from '$lib';
 import type { AllContributions, PlaybackSettings } from '../config/types';
 
+let ToneModule: typeof import('tone') | null = null;
+
 let username = '';
 let contributionData: AllContributions | null = null;
 let selectedYear = 'pastYear';
@@ -42,9 +44,31 @@ let soundTipTimer: ReturnType<typeof setTimeout> | null = null;
 let harmonyTipTimer: ReturnType<typeof setTimeout> | null = null;
 let copiedTipTimer: ReturnType<typeof setTimeout> | null = null;
 
-const tipDuration = 6000;
+const tipDuration = 5000;
 
-const apiUrl = import.meta.env.VITE_API_URL || '/api/';
+onMount(async () => {
+  try {
+    ToneModule = await import('tone');
+    audioEngine.preloadSounds();
+  } catch (err) {
+    console.error('Failed to preload Tone.js:', err);
+  }
+  
+  try {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      theme = savedTheme as 'light' | 'dark';
+      if (theme === 'dark') {
+        document.body.classList.add('dark-mode');
+      }
+    }
+    
+    soundTipShown = localStorage.getItem('soundTipShown') === 'true';
+    harmonyTipShown = localStorage.getItem('harmonyTipShown') === 'true';
+  } catch (e) {
+    console.warn('Could not load preferences from localStorage:', e);
+  }
+});
 
 function handleSubmit() {
   if (username) {
@@ -58,7 +82,7 @@ async function fetchContributions() {
     loading = true;
     errorMessage = '';
     
-    let url = `${apiUrl}contributions?username=${encodeURIComponent(username)}`;
+    let url = `/api/contributions?username=${encodeURIComponent(username)}`;
     if (selectedYear !== 'pastYear') {
       url += `&year=${selectedYear}`;
     }
@@ -94,8 +118,12 @@ async function togglePlay() {
     stopPlayback();
   } else {
     try {
-      const Tone = await import('tone');
-      await Tone.start();
+      if (!ToneModule) {
+        ToneModule = await import('tone');
+      }
+      
+      await ToneModule.start();
+      
       startPlayback();
       
       showSoundTip = false;

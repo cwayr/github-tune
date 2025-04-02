@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { AllContributions, ContributionYear } from '../config/types';
+import type { AllContributions } from '../config/types';
 
 export let contributionData: AllContributions | null = null;
 export let currentPosition: { week: number; day: number } | null = null;
@@ -75,12 +75,6 @@ function getContributionColor(level: number): string {
 
 function isActiveWeek(week: number): boolean {
   return currentPosition?.week === week;
-}
-
-function isCurrentDayOrPassed(weekIndex: number, dayIndex: number): boolean {
-  if (!currentPosition || !isPlaying) return false;
-  if (weekIndex !== currentPosition.week) return false;
-  return dayIndex <= currentPosition.day;
 }
 
 function isCurrentDay(weekIndex: number, dayIndex: number): boolean {

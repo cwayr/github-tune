@@ -28,7 +28,6 @@ class AudioEngine {
         console.log('Initializing Tone.js audio engine');
         if (Tone.getContext().state !== 'running') {
           await Tone.start();
-          console.log('Tone.js context started');
         }
 
         this.sampler = new Tone.Sampler({
@@ -69,12 +68,9 @@ class AudioEngine {
           decay: 1.5,
           wet: 0.5
         }).toDestination();
-        console.log('Reverb created and connected to destination');
 
         this.isInitialized = true;
-        console.log('Tone.js audio engine initialized setup for reverb');
 
-        // If onload isn't called after 5 seconds, resolve anyway to prevent hanging
         setTimeout(() => {
           if (!this.samplesLoaded) {
             console.warn('Sample loading timed out, continuing anyway');
@@ -117,9 +113,7 @@ class AudioEngine {
       
       if (Tone.getContext().state !== 'running') {
         try {
-          console.log('Starting Tone.js context');
           await Tone.start();
-          console.log('Tone.js context state:', Tone.getContext().state);
         } catch (error) {
           console.error('Error starting Tone.js context:', error);
           throw new Error('Failed to start audio context');
@@ -149,7 +143,6 @@ class AudioEngine {
           });
           
           this.lastHarmonyIndex = currentHarmonyIndex;
-          console.log(`Playing harmony chord for week ${week}: ${chord.notes.join(', ')} (chord ${currentHarmonyIndex + 1} of ${harmony.chords.length})`);
         }
         
         if (chord.scale && chord.scale.length > 0) {

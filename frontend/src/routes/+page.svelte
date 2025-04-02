@@ -12,6 +12,8 @@ import ContributionGraph from '../components/ContributionGraph.svelte';
 import PlaybackControls from '../components/PlaybackControls.svelte';
 import Tip from '../components/Tip.svelte';
 import { getAvailableHarmonies, audioEngine } from '$lib';
+import { fetchContributions } from '$lib/services/contributionService';
+import { tips, hasTipBeenShown, markTipAsShown, showTip, hideTip, DEFAULT_TIP_DURATION } from '$lib/services/tipService';
 import type { AllContributions, PlaybackSettings } from '../config/types';
 
 let ToneModule: typeof import('tone') | null = null;
@@ -35,19 +37,18 @@ let errorMessage = '';
 let showIntro = true;
 let visualizerMode = false;
 
-let showSoundTip = false;
-let showHarmonyTip = false;
-let showCopiedTip = false;
-let soundTipShown = false;
-let harmonyTipShown = false;
+let tipsState: Record<string, any> = {};
+let unsubscribe: () => void;
 
-let soundTipTimer: ReturnType<typeof setTimeout> | null = null;
-let harmonyTipTimer: ReturnType<typeof setTimeout> | null = null;
-let copiedTipTimer: ReturnType<typeof setTimeout> | null = null;
-
-const tipDuration = 5000;
+const SOUND_TIP = 'sound';
+const HARMONY_TIP = 'harmony';
+const COPIED_TIP = 'copied';
 
 onMount(async () => {
+  unsubscribe = tips.subscribe(value => {
+    tipsState = value;
+  });
+
   try {
     ToneModule = await import('tone');
     audioEngine.preloadSounds();
@@ -63,9 +64,6 @@ onMount(async () => {
         document.body.classList.add('dark-mode');
       }
     }
-    
-    soundTipShown = localStorage.getItem('soundTipShown') === 'true';
-    harmonyTipShown = localStorage.getItem('harmonyTipShown') === 'true';
   } catch (e) {
     console.warn('Could not load preferences from localStorage:', e);
   }
@@ -76,7 +74,7 @@ onMount(async () => {
     
     if (userParam) {
       username = userParam;
-      fetchContributions();
+      handleFetchContributions();
       showIntro = false;
     }
   }
@@ -84,39 +82,20 @@ onMount(async () => {
 
 function handleSubmit() {
   if (username) {
-    fetchContributions();
+    handleFetchContributions();
     showIntro = false;
   }
 }
 
-async function fetchContributions() {
+async function handleFetchContributions() {
   try {
     loading = true;
     errorMessage = '';
     
-    let url = `/api/contributions?username=${encodeURIComponent(username)}`;
-    if (selectedYear !== 'pastYear') {
-      url += `&year=${selectedYear}`;
-    }
+    contributionData = await fetchContributions(username, selectedYear);
     
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch contributions: ${response.status} ${response.statusText}`);
-    }
-    
-    const jsonText = await response.text();
-    
-    try {
-      contributionData = JSON.parse(jsonText);
-      
-      currentPosition = null;
-      stopPlayback();
-    } catch (parseError) {
-      console.error('Error parsing JSON:', parseError);
-      console.error('Invalid JSON content:', jsonText);
-      throw new Error('Invalid response format from server');
-    }
+    currentPosition = null;
+    stopPlayback();
   } catch (err) {
     console.error('Error fetching contributions:', err);
     errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
@@ -135,28 +114,18 @@ async function togglePlay() {
       }
       
       await ToneModule.start();
-      
       startPlayback();
       
-      showSoundTip = false;
-      
-      if (!soundTipShown) {
-        soundTipShown = true;
-        try {
-          localStorage.setItem('soundTipShown', 'true');
-        } catch (e) {
-          console.warn('Could not save to localStorage:', e);
-        }
+      hideTip(SOUND_TIP);
+
+      if (!hasTipBeenShown(SOUND_TIP)) {
+        markTipAsShown(SOUND_TIP);
       }
       
-      if (!harmonyTipShown && !playbackSettings.harmony.enabled) {
+      if (!hasTipBeenShown(HARMONY_TIP) && !playbackSettings.harmony.enabled) {
         setTimeout(() => {
           if (!playbackSettings.harmony.enabled) {
-            showHarmonyTip = true;
-            
-            harmonyTipTimer = setTimeout(() => {
-              showHarmonyTip = false;
-            }, tipDuration);
+            showTip(HARMONY_TIP, "Try 'Harmonized Mode' for preset chord progressions!", DEFAULT_TIP_DURATION);
           }
         }, 5000);
       }
@@ -205,21 +174,11 @@ function updateSettings(event: CustomEvent | { detail: any }) {
   playbackSettings = event.detail;
   
   if (playbackSettings.harmony.enabled) {
-    if (!harmonyTipShown) {
-      harmonyTipShown = true;
-      try {
-        localStorage.setItem('harmonyTipShown', 'true');
-      } catch (e) {
-        console.warn('Could not save to localStorage:', e);
-      }
+    if (!hasTipBeenShown(HARMONY_TIP)) {
+      markTipAsShown(HARMONY_TIP);
     }
     
-    showHarmonyTip = false;
-    
-    if (harmonyTipTimer) {
-      clearTimeout(harmonyTipTimer);
-      harmonyTipTimer = null;
-    }
+    hideTip(HARMONY_TIP);
   }
 }
 
@@ -257,13 +216,7 @@ async function copyShareLink() {
   try {
     await navigator.clipboard.writeText(generateShareLink());
     
-    showCopiedTip = true;
-    
-    if (copiedTipTimer) clearTimeout(copiedTipTimer);
-    
-    copiedTipTimer = setTimeout(() => {
-      showCopiedTip = false;
-    }, tipDuration);
+    showTip(COPIED_TIP, "Link copied to clipboard!");
   } catch (err) {
     console.error('Failed to copy: ', err);
   }
@@ -271,9 +224,6 @@ async function copyShareLink() {
 
 onMount(() => {
   try {
-    soundTipShown = localStorage.getItem('soundTipShown') === 'true';
-    harmonyTipShown = localStorage.getItem('harmonyTipShown') === 'true';
-    
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark' || savedTheme === 'light') {
       theme = savedTheme;
@@ -327,16 +277,13 @@ onMount(() => {
       }
     }
     
-    fetchContributions();
+    handleFetchContributions();
     showIntro = false;
   }
   
   setTimeout(() => {
-    if (!isPlaying && !soundTipShown) {
-      showSoundTip = true;
-      soundTipTimer = setTimeout(() => {
-        showSoundTip = false;
-      }, tipDuration);
+    if (!isPlaying && !hasTipBeenShown(SOUND_TIP)) {
+      showTip(SOUND_TIP, "Click play to hear your contribution melody!");
     }
   }, 3000);
 });
@@ -346,45 +293,33 @@ onMount(() => {
   <div class="visualizer"></div>
 </div>
 
-{#if showSoundTip}
+{#if $tips[SOUND_TIP]?.visible}
   <Tip 
-    message="Make sure your device sound is on!" 
+    message={$tips[SOUND_TIP].message} 
     icon={Volume2} 
     theme={theme} 
     tipType="sound-tip"
-    duration={tipDuration}
-    on:close={() => {
-      showSoundTip = false;
-      if (soundTipTimer) clearTimeout(soundTipTimer);
-    }}
+    on:close={() => hideTip(SOUND_TIP)}
   />
 {/if}
 
-{#if showHarmonyTip}
+{#if $tips[HARMONY_TIP]?.visible}
   <Tip 
-    message="Try 'Harmonized Mode' for preset chord progressions!" 
+    message={$tips[HARMONY_TIP].message} 
     icon={Music} 
     theme={theme} 
     tipType="harmony-tip"
-    duration={tipDuration}
-    on:close={() => {
-      showHarmonyTip = false;
-      if (harmonyTipTimer) clearTimeout(harmonyTipTimer);
-    }}
+    on:close={() => hideTip(HARMONY_TIP)}
   />
 {/if}
 
-{#if showCopiedTip}
+{#if $tips[COPIED_TIP]?.visible}
   <Tip 
-    message="Link copied to clipboard." 
+    message={$tips[COPIED_TIP].message} 
     icon={Share} 
     theme={theme} 
     tipType="copied-tip"
-    duration={tipDuration}
-    on:close={() => {
-      showCopiedTip = false;
-      if (copiedTipTimer) clearTimeout(copiedTipTimer);
-    }}
+    on:close={() => hideTip(COPIED_TIP)}
   />
 {/if}
 

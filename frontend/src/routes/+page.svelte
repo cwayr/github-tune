@@ -1,5 +1,6 @@
 <script lang="ts">
 import { onMount } from 'svelte';
+import { browser } from '$app/environment';
 import Music from '@lucide/svelte/icons/music';
 import Play from '@lucide/svelte/icons/play';
 import Square from '@lucide/svelte/icons/square';
@@ -67,6 +68,17 @@ onMount(async () => {
     harmonyTipShown = localStorage.getItem('harmonyTipShown') === 'true';
   } catch (e) {
     console.warn('Could not load preferences from localStorage:', e);
+  }
+  
+  if (browser) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const userParam = urlParams.get('user');
+    
+    if (userParam) {
+      username = userParam;
+      fetchContributions();
+      showIntro = false;
+    }
   }
 });
 

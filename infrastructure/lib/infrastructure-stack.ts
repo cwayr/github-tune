@@ -80,14 +80,16 @@ export class InfrastructureStack extends Stack {
       ],
     });
 
-    const allowedOrigins = [`https://${domainName}`];
-
     const httpApi = new apigwv2.HttpApi(this, `${namingPrefix}-httpApi`, {
       apiName: `${namingPrefix}-httpApi`,
       corsPreflight: {
         allowHeaders: ['Content-Type'],
         allowMethods: [apigwv2.CorsHttpMethod.ANY],
-        allowOrigins: allowedOrigins,
+        allowOrigins: [
+          `https://${domainName}`,
+          'http://localhost:5173',
+          'http://localhost:4173'
+        ],
         maxAge: Duration.days(10),
       },
     });
@@ -127,6 +129,11 @@ export class InfrastructureStack extends Stack {
       errorResponses: [
         {
           httpStatus: 404,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html',
+        },
+        {
+          httpStatus: 403,
           responseHttpStatus: 200,
           responsePagePath: '/index.html',
         },

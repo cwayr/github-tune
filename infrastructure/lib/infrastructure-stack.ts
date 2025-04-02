@@ -10,6 +10,7 @@ import {
   aws_route53 as route53,
   aws_apigatewayv2 as apigwv2,
   aws_cloudfront as cloudfront,
+  aws_cloudwatch as cloudwatch,
   aws_certificatemanager as acm,
   aws_s3_deployment as s3deploy,
   aws_route53_targets as targets,
@@ -58,6 +59,25 @@ export class InfrastructureStack extends Stack {
         nodeModules: ['cheerio'],
       },
       logRetention: logs.RetentionDays.TWO_WEEKS,
+    });
+
+    new cloudwatch.Dashboard(this, `${namingPrefix}-dashboard`, {
+      dashboardName: `${namingPrefix}-monitoring`,
+      widgets: [
+        [
+          new cloudwatch.GraphWidget({
+            title: 'Lambda Invocations',
+            left: [
+              new cloudwatch.Metric({
+                namespace: 'AWS/Lambda',
+                metricName: 'Invocations',
+                dimensionsMap: { FunctionName: contributionFetcherFn.functionName },
+                statistic: 'Sum',
+              }),
+            ],
+          }),
+        ],
+      ],
     });
 
     const allowedOrigins = [`https://${domainName}`];

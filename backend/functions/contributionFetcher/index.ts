@@ -10,7 +10,6 @@ interface LambdaEvent {
 }
 
 interface AllContributions {
-  pastYear: ContributionYear;
   [year: string]: ContributionYear;
 }
 
@@ -80,7 +79,6 @@ async function fetchContributionsForUrl(url: string): Promise<ContributionYear |
 
     if (!response.ok) {
       if (response.status === 429) {
-        // Rate limited - could implement retry logic here
         console.warn(`Rate limited when fetching ${url}`);
       }
       throw new Error(`GitHub returned ${response.status}: ${response.statusText}`);
@@ -118,10 +116,10 @@ export async function handler(event: LambdaEvent) {
     const { username } = parseRequestParams(event.queryStringParameters);
     const allContributions: AllContributions = {} as AllContributions;
     
-    const mainUrl = `https://github.com/${encodeURIComponent(username)}?tab=contributions`;
-    console.log(`Fetching main contributions page from: ${mainUrl}`);
+    const fetchUrl = `https://github.com/${encodeURIComponent(username)}?tab=contributions`;
+    console.log(`Fetching contributions from: ${fetchUrl}`);
     
-    const initialResponse = await fetch(mainUrl, { 
+    const initialResponse = await fetch(fetchUrl, { 
       headers: { 'x-requested-with': 'XMLHttpRequest' }
     });
     
@@ -136,16 +134,14 @@ export async function handler(event: LambdaEvent) {
       throw new Error(`Could not parse contribution data for user ${username}`);
     }
     
-    allContributions.pastYear = currentYearContributions;
-    
     const yearLinks = extractYearLinks(initialHtml);
     
     if (yearLinks.length === 0) {
       console.warn(`No year links found for user ${username}. Only returning current year.`);
       
       const currentDate = new Date();
-      const currentYear = currentDate.getFullYear();
-      allContributions[currentYear.toString()] = currentYearContributions;
+      const currentYear = currentDate.getFullYear().toString();
+      allContributions[currentYear] = currentYearContributions;
       
       console.timeEnd('contributionFetcher');
       return {
@@ -154,11 +150,11 @@ export async function handler(event: LambdaEvent) {
       };
     }
     
-    const currentYearLink = yearLinks[0]; // Assuming first link is current year (sorted newest first)
+    const currentYearLink = yearLinks[0];
     allContributions[currentYearLink.year.toString()] = currentYearContributions;
     console.log(`Added current year ${currentYearLink.year} contributions`);
     
-    const yearLinksToFetch = yearLinks.slice(1); // Skip the first (current year) link
+    const yearLinksToFetch = yearLinks.slice(1);
     
     let batchResults: YearFetchResult[] = [];
     for (let i = 0; i < yearLinksToFetch.length; i += MAX_CONCURRENT_REQUESTS) {

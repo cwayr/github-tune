@@ -30,7 +30,6 @@ export interface PlaybackSettings {
 export type Theme = 'light' | 'dark' | 'custom';
 
 export interface AllContributions {
-  pastYear: ContributionYear;
   [year: string]: ContributionYear;
 }
 

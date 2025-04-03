@@ -6,7 +6,7 @@ GitHub Tune transforms your contribution history into music, creating a unique m
 
 ## Demo
 
-1. Change your GitHub Profile URL `github.com/username` to **`githubtune.com/username`**. _(COMING SOON)_
+1. Change your GitHub Profile URL `github.com/username` to **`githubtune.com/username`**.
 2. Press **Play** to hear your coding activity as music, adjust the scales and moods for variety!
 
 <img src="frontend/static/og-image.png" alt="GitHub Tune Site Image" width="600">

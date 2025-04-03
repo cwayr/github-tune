@@ -20,7 +20,7 @@ let ToneModule: typeof import('tone') | null = null;
 
 let username = '';
 let contributionData: AllContributions | null = null;
-let selectedYear = 'pastYear';
+let selectedYear = new Date().getFullYear().toString();
 let isPlaying = false;
 let currentPosition: { week: number; day: number } | null = null;
 let playbackSettings: PlaybackSettings = {
@@ -82,7 +82,7 @@ onMount(async () => {
 
 function handleSubmit() {
   if (username) {
-    selectedYear = 'pastYear';
+    selectedYear = new Date().getFullYear().toString();
     handleFetchContributions();
     showIntro = false;
   }
@@ -196,10 +196,7 @@ function generateShareLink(): string {
   const params = new URLSearchParams();
   
   params.set('user', username);
-  
-  if (selectedYear !== 'pastYear') {
-    params.set('year', selectedYear);
-  }
+  params.set('year', selectedYear);
   
   params.set('speed', playbackSettings.speed.toString());
   params.set('harmony', playbackSettings.harmony.enabled ? '1' : '0');

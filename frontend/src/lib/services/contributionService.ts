@@ -1,20 +1,15 @@
 import type { AllContributions } from '../../config/types';
 
 /**
- * Fetches GitHub contribution data for a specified username and year
+ * Fetches GitHub contribution data for a specified username
  * @param username GitHub username to fetch contributions for
- * @param year Optional year to fetch contributions for (default is past year)
- * @returns Promise resolving to contribution data
+ * @returns Promise resolving to contribution data containing all available years
  * @throws Error if the fetch or parsing fails
  */
 export async function fetchContributions(username: string, year?: string): Promise<AllContributions> {
-  const apiUrl = import.meta.env.VITE_API_URL || '/api/';
+  const apiUrl = import.meta.env.VITE_API_URL || 'https://githubtune.com/api/';
 
   let url = `${apiUrl}contributions?username=${encodeURIComponent(username)}`;
-  
-  if (year && year !== 'pastYear') {
-    url += `&year=${year}`;
-  }
   
   const response = await fetch(url);
   

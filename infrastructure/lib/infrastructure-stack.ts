@@ -85,7 +85,11 @@ export class InfrastructureStack extends Stack {
       corsPreflight: {
         allowHeaders: ['Content-Type'],
         allowMethods: [apigwv2.CorsHttpMethod.ANY],
-        allowOrigins: [`https://${domainName}`, 'http://localhost:5173'],
+        allowOrigins: [
+          `https://${domainName}`, 
+          'http://localhost:5173',
+          'http://localhost:4173'
+        ],
         maxAge: Duration.days(10),
       },
     });

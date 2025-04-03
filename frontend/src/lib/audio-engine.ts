@@ -227,7 +227,6 @@ class AudioEngine {
     }
     
     this.isPreloading = true;
-    console.log('Preloading Tone.js resources and audio samples');
     
     return this.initAudio()
       .then(() => {

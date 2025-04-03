@@ -46,7 +46,7 @@ Scrapes GitHub's contribution graph HTML and returns structured contribution dat
 **Response Format**:
 ```typescript
 {
-  "pastYear": {
+  "2025": {
     "weeks": [
       {
         "days": [

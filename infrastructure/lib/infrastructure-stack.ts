@@ -156,7 +156,7 @@ export class InfrastructureStack extends Stack {
     });
 
     const configFile = new s3deploy.BucketDeployment(this, `${namingPrefix}-configDeployment`, {
-      sources: [s3deploy.Source.data('config.js', `window.ENV = { VITE_API_URL: "${domainName}/api" };`)],
+      sources: [s3deploy.Source.data('config.js', `window.ENV = { VITE_API_URL: "https://${domainName}/api" };`)],
       destinationBucket: websiteBucket,
     });
 

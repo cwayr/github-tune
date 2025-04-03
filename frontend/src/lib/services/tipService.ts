@@ -9,7 +9,7 @@ export interface Tip {
 
 export type TipStatus = Record<string, boolean>;
 
-export const DEFAULT_TIP_DURATION = 5000;
+export const DEFAULT_TIP_DURATION = 6000;
 
 const tips: Writable<Record<string, Tip>> = writable({});
 const tipShownStatus: Writable<TipStatus> = writable({});

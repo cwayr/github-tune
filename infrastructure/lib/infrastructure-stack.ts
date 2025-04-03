@@ -151,13 +151,20 @@ export class InfrastructureStack extends Stack {
       target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(distribution)),
     });
 
-    new s3deploy.BucketDeployment(this, `${namingPrefix}-websiteDeployment`, {
+    const websiteDeployment = new s3deploy.BucketDeployment(this, `${namingPrefix}-websiteDeployment`, {
       sources: [s3deploy.Source.asset(path.join(__dirname, frontendBuildPath))],
       destinationBucket: websiteBucket,
       distribution,
       distributionPaths: ['/*'],
       prune: false,
     });
+
+    const configFile = new s3deploy.BucketDeployment(this, `${namingPrefix}-configDeployment`, {
+      sources: [s3deploy.Source.data('config.js', `window.ENV = { VITE_API_URL: "${domainName}/api" };`)],
+      destinationBucket: websiteBucket,
+    });
+
+    websiteDeployment.node.addDependency(configFile);
 
     new CfnOutput(this, 'SiteURL', {
       value: `https://${domainName}`,

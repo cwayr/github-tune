@@ -8,7 +8,9 @@ import type { AllContributions } from '../../config/types';
  * @throws Error if the fetch or parsing fails
  */
 export async function fetchContributions(username: string, year?: string): Promise<AllContributions> {
-  let url = `/api/contributions?username=${encodeURIComponent(username)}`;
+  const apiUrl = import.meta.env.VITE_API_URL || '/api/';
+
+  let url = `${apiUrl}contributions?username=${encodeURIComponent(username)}`;
   
   if (year && year !== 'pastYear') {
     url += `&year=${year}`;

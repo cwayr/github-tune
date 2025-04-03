@@ -122,10 +122,11 @@ async function togglePlay() {
         markTipAsShown(SOUND_TIP);
       }
       
-      if (!hasTipBeenShown(HARMONY_TIP) && !playbackSettings.harmony.enabled) {
+      if (!hasTipBeenShown(HARMONY_TIP)) {
         setTimeout(() => {
-          if (!playbackSettings.harmony.enabled) {
+          if (!hasTipBeenShown(HARMONY_TIP)) {
             showTip(HARMONY_TIP, "Try 'Harmonized Mode' for preset chord progressions!", DEFAULT_TIP_DURATION);
+            markTipAsShown(HARMONY_TIP);
           }
         }, 5000);
       }
@@ -174,10 +175,6 @@ function updateSettings(event: CustomEvent | { detail: any }) {
   playbackSettings = event.detail;
   
   if (playbackSettings.harmony.enabled) {
-    if (!hasTipBeenShown(HARMONY_TIP)) {
-      markTipAsShown(HARMONY_TIP);
-    }
-    
     hideTip(HARMONY_TIP);
   }
 }
@@ -283,7 +280,7 @@ onMount(() => {
   
   setTimeout(() => {
     if (!isPlaying && !hasTipBeenShown(SOUND_TIP)) {
-      showTip(SOUND_TIP, "Click play to hear your contribution melody!");
+      showTip(SOUND_TIP, "Make sure your volume is on.");
     }
   }, 3000);
 });

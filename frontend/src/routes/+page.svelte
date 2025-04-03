@@ -82,6 +82,7 @@ onMount(async () => {
 
 function handleSubmit() {
   if (username) {
+    selectedYear = 'pastYear';
     handleFetchContributions();
     showIntro = false;
   }
@@ -413,6 +414,7 @@ onMount(() => {
           <PlaybackControls 
             on:settingsUpdate={updateSettings} 
             settings={playbackSettings} 
+            on:stopPlayback={stopPlayback}
           />
         </div>
       </div>

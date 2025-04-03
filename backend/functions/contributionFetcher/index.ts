@@ -126,6 +126,9 @@ export async function handler(event: LambdaEvent) {
     });
     
     if (!initialResponse.ok) {
+      if (initialResponse.status === 404) {
+        throw new Error(`GitHub username '${username}' not found.`);
+      }
       throw new Error(`GitHub returned ${initialResponse.status}: ${initialResponse.statusText}`);
     }
     
@@ -198,6 +201,11 @@ export async function handler(event: LambdaEvent) {
   } catch (error: unknown) {
     console.timeEnd('contributionFetcher');
     const errorResponse = handleError(error, 'contributionFetcher/handler');
+    
+    if (error instanceof Error && error.message.includes('username') && error.message.includes('not found')) {
+      errorResponse.statusCode = 404;
+    }
+    
     return {
       statusCode: errorResponse.statusCode,
       body: JSON.stringify(errorResponse),

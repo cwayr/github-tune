@@ -57,7 +57,7 @@
 	<meta property="twitter:image" content={defaultImage} />
 	
 	<!-- Additional SEO Meta Tags -->
-	<meta name="keywords" content="github, contributions, commits, music, piano, melody, visualization, coding activity, developer tools" />
+	<meta name="keywords" content="github, contributions, graph, chart, commits, music, piano, melody, visualization" />
 	<meta name="robots" content="index, follow" />
 </svelte:head>
 

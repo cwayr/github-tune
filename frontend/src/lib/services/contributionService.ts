@@ -19,6 +19,9 @@ export async function fetchContributions(username: string, year?: string): Promi
   const response = await fetch(url);
   
   if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error(`GitHub username not found.`);
+    }
     throw new Error(`Failed to fetch contributions: ${response.status} ${response.statusText}`);
   }
   

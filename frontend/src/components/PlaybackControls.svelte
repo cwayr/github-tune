@@ -24,6 +24,8 @@
   function selectMoodOrHarmony(event: Event) {
     const target = event.target as HTMLSelectElement;
     
+    dispatch('stopPlayback');
+    
     if (settings.harmony.enabled) {
       updateSettings({
         ...settings,

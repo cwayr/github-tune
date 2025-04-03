@@ -46,6 +46,8 @@
   }
   
   function toggleHarmony() {
+    dispatch('stopPlayback');
+    
     updateSettings({
       ...settings,
       harmony: {

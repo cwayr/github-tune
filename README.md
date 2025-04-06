@@ -69,16 +69,6 @@ AWS CDK code for provisioning and managing cloud infrastructure.
   - [API Gateway](https://aws.amazon.com/api-gateway/) - API management
   - [S3](https://aws.amazon.com/s3/) - Static hosting
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-See the individual README files in each directory for component-specific contribution guidelines.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
 ## Acknowledgements
 
 - [GitHub](https://github.com/) for the inspiration and contribution graph

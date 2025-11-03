@@ -6,7 +6,7 @@ GitHub Tune transforms your contribution history into music, creating a unique m
 
 ## 🎵 Try It Out
 
-Visit **[githubtune.com/username](https://githubtune.com)** (replace `username` with any GitHub username) to:
+Visit **githubtune.com/username** (replace `username` with any GitHub username) to:
 
 1. View your GitHub contribution graph
 2. Press **Play** to hear your coding activity as music
